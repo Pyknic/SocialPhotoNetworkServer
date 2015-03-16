@@ -52,13 +52,13 @@ public abstract class Server extends NanoHTTPD implements ServerAPI {
         final long userId	     = parseLong(params, "userid");
 		final String mail	     = parseString(params, "mail");
 		final String password    = parseString(params, "password");
-        final String sessionKey  = parseString(params, "sessionKey");
+        final String sessionKey  = parseString(params, "sessionkey");
         final String title       = parseString(params, "title");
         final String description = parseString(params, "description");
         final String imgData     = parseString(params, "imgdata");
         final String freeText    = parseString(params, "freetext");
-        final Optional<LocalDateTime> beforeTimestamp = parseTime(params, "beforeTimestamp");
-        final Optional<LocalDateTime> afterTimestamp  = parseTime(params, "afterTimestamp");
+        final Optional<LocalDateTime> beforeTimestamp = parseTime(params, "before");
+        final Optional<LocalDateTime> afterTimestamp  = parseTime(params, "after");
 		
 		final String msg;
 		switch (command) {
@@ -89,6 +89,6 @@ public abstract class Server extends NanoHTTPD implements ServerAPI {
     }
     
     private Optional<String> parseOptional(Map<String, String> params, String command) {
-        return ofNullable(params.get(command)).map(s -> s.trim());
+        return ofNullable(params.get(command)).map(s -> s.trim()).filter(s -> !s.isEmpty());
     }
 }
