@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  *
  * @author Emil Forslund
  */
-public abstract class Server extends NanoHTTPD implements PolaroidAPI {
+public abstract class Server extends NanoHTTPD implements ServerAPI {
 	public Server() {
 		super (8080);
 		System.out.println("System running on http://127.0.0.1:8080.");

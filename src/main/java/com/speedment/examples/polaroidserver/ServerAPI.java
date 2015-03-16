@@ -7,7 +7,7 @@ import java.util.Optional;
  *
  * @author Emil Forslund
  */
-public interface PolaroidAPI {
+public interface ServerAPI {
 	
     String onRegister(String mail, String password);
 	String onLogin(String mail, String password);
