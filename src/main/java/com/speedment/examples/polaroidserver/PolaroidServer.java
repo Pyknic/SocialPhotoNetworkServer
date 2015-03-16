@@ -19,7 +19,11 @@ public class PolaroidServer extends Server {
 
 	@Override
 	public String onLogin(String mail, String password) {
-		// TODO: Write login function.
+		if ("mail@example.com".equals(mail)) {
+			final String key = nextSessionId();
+			sessionKeys.add(key);
+			return key;
+		}
         return "false";
 	}
 
