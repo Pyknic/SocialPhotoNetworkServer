@@ -89,6 +89,6 @@ public abstract class Server extends NanoHTTPD implements ServerAPI {
     }
     
     private Optional<String> parseOptional(Map<String, String> params, String command) {
-        return ofNullable(params.get(command)).map(s -> s.trim());
+        return ofNullable(params.get(command)).map(s -> s.trim()).filter(p -> !p.isEmpty());
     }
 }
