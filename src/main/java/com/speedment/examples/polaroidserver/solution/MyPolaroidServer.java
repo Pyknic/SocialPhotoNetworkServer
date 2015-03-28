@@ -46,12 +46,36 @@ public class MyPolaroidServer extends PolaroidServer {
     }
 
     @Override
+    public String onUpload(String title, String description, String imgData, String sessionKey) {
+        return sessionProtected(sessionKey, uid -> {
+            final Image image = ImageManager.get().builder().setTitle(title).setDescription(description).setUploaded(now()).setUploader(uid);
+            return Optional.ofNullable(ImageManager.get().persist(image)).map(i -> success()).orElse(fail());
+        });
+    }
+
+    @Override
     public String onSelf(String sessionKey) {
         return sessionProtected(sessionKey, uid -> {
             final Optional<User> user = UserManager.get().stream().filter(u -> uid.equals(u.getId())).findAny();
             return user.map(this::toJson).orElse(fail());
         });
+    }
 
+    @Override
+    public String onFind(String freeText, String sessionKey) {
+        return sessionProtected(sessionKey, uid -> {
+            final Optional<User> user = UserManager.get().stream().filter(u -> u.getMail().contains(freeText)).findAny();
+            return user.map(this::toJson).orElse(fail());
+        });
+    }
+
+    @Override
+    public String onFollow(long userId, String sessionKey) {
+       return sessionProtected(sessionKey, uid -> {return fail();
+//            final Link link = LinkManager.get().builder().setFollower(uid).set
+//            final Optional<User> user = UserManager.get().stream().filter(u -> u.getMail().contains(freeText)).findAny();
+//            return user.map(this::toJson).orElse(fail());
+        });
     }
 
     @Override
@@ -61,12 +85,6 @@ public class MyPolaroidServer extends PolaroidServer {
                     + ImageManager.get().stream().map(this::toJson).collect(Collectors.joining(", "))
                     + "]}";
         });
-    }
-
-    @Override
-    public String onFind(String freeText, String sessionKey) {
-        return sessionProtected(sessionKey, uid -> "");
-
     }
 
     public String sessionProtected(String sessionKey, Function<Long, String> mapper) {
@@ -100,7 +118,7 @@ public class MyPolaroidServer extends PolaroidServer {
                 jsonPair("description", image.getDescription()),
                 jsonPair("imgdata", image.getImgData()),
                 jsonPair("uploaded", image.getUploaded()),
-                jsonPair("uploadedby", toJson(image.findUploader()))
+                jsonPair("uploadedby", image.findUploader())
         );
     }
 
@@ -117,7 +135,11 @@ public class MyPolaroidServer extends PolaroidServer {
     }
 
     private String jsonPair(String key, Timestamp value) {
-        return formatKey(key) + ":" + quote(value);
+        return formatKey(key) + ":" + quote(value.toString().substring(0, 19));
+    }
+
+    private String jsonPair(String key, User value) {
+        return formatKey(key) + ":" + toJson(value);
     }
 
     private String formatKey(String key) {
@@ -132,7 +154,15 @@ public class MyPolaroidServer extends PolaroidServer {
     }
 
     private String fail() {
-        return "false";
+        return Boolean.FALSE.toString();
+    }
+
+    private String success() {
+        return Boolean.TRUE.toString();
+    }
+
+    private Timestamp now() {
+        return new Timestamp(System.currentTimeMillis());
     }
 
     public static void main(String... args) {
