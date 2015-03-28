@@ -2,33 +2,37 @@ package com.speedment.examples.polaroidserver;
 
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
-import java.util.HashSet;
-import java.util.Set;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Random;
 
 /**
  *
  * @author Emil Forslund
  */
 public class PolaroidServer extends Server {
-	
-	private final Set<String> sessionKeys = new HashSet<>();
-	private final SecureRandom random = new SecureRandom();
 
-	@Override
-	public String onLogin(String mail, String password) {
-		// TODO: Write login function.
-        return "false";
-	}
+    protected final Random random = new SecureRandom();
 
-	@Override
-	public String onRegister(String mail, String password) {
-		// TODO: Write register function.
+    @Override
+    public String onRegister(String mail, String password) {
+        // TODO: Write register function.
         return "false";
-	}
-    
+    }
+
+    @Override
+    public String onLogin(String mail, String password) {
+        // TODO: Write login function.
+        return "false";
+    }
+
+    @Override
+    public String onSelf(String sessionKey) {
+        // TODO: Write self function.
+        return "false";
+    }
+
     @Override
     public String onUpload(String title, String description, String imgData, String sessionKey) {
         // TODO: Write upload function.
@@ -52,19 +56,21 @@ public class PolaroidServer extends Server {
         // TODO: Write browse function.
         return "false";
     }
-    
-    private boolean verify(String sessionKey) {
-		return sessionKeys.contains(sessionKey);
-	}
-	
-	private String nextSessionId() {
-		return new BigInteger(130, random).toString(32);
-	}
 
-	/**
-	 * @param args the command line arguments
-	 */
-	public static void main(String... args) {
-		ServerRunner.run(PolaroidServer.class);
-	}
+    @Override
+    public String onUpdate(String mail, String firstname, String lastName, Optional<String> avatar, String sessionKey) {
+        // TODO: Write update profile
+        return "false";
+    }
+
+    protected String nextSessionId() {
+        return new BigInteger(130, random).toString(32);
+    }
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String... args) {
+        ServerRunner.run(PolaroidServer.class);
+    }
 }
