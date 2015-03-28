@@ -52,7 +52,7 @@ public interface ImageManager extends SqlManager<Long, Image, ImageBuilder> {
             case "uploader" : return entity.getUploader();
             case "title" : return entity.getTitle();
             case "description" : return entity.getDescription();
-            case "imgData" : return entity.getImgData();
+            case "img_data" : return entity.getImgData();
             case "uploaded" : return entity.getUploaded();
             default : throw new IllegalArgumentException("Unknown column '" + column.getName() + "'.");
         }

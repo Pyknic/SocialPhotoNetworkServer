@@ -20,7 +20,7 @@ public interface Link {
     
     Long getFollower();
     
-    String getFollows();
+    Long getFollows();
     
     default User findFollower() {
         return Platform.get().get(ManagerComponent.class)

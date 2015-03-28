@@ -3,7 +3,10 @@ package com.speedment.examples.polaroidserver.solution;
 import com.company.speedment.orm.test.polaroid.PolaroidApplication;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.image.Image;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.image.ImageManager;
+import com.company.speedment.orm.test.polaroid.db0.polaroid.link.Link;
+import com.company.speedment.orm.test.polaroid.db0.polaroid.link.LinkManager;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.user.User;
+import com.company.speedment.orm.test.polaroid.db0.polaroid.user.UserBuilder;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.user.UserManager;
 import com.speedment.examples.polaroidserver.PolaroidServer;
 import fi.iki.elonen.ServerRunner;
@@ -14,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,7 +52,12 @@ public class MyPolaroidServer extends PolaroidServer {
     @Override
     public String onUpload(String title, String description, String imgData, String sessionKey) {
         return sessionProtected(sessionKey, uid -> {
-            final Image image = ImageManager.get().builder().setTitle(title).setDescription(description).setUploaded(now()).setUploader(uid);
+            final Image image = ImageManager.get().builder()
+                    .setTitle(title)
+                    .setDescription(description)
+                    .setUploaded(now())
+                    .setUploader(uid)
+                    .setImgData(imgData);
             return Optional.ofNullable(ImageManager.get().persist(image)).map(i -> success()).orElse(fail());
         });
     }
@@ -71,19 +80,39 @@ public class MyPolaroidServer extends PolaroidServer {
 
     @Override
     public String onFollow(long userId, String sessionKey) {
-       return sessionProtected(sessionKey, uid -> {return fail();
-//            final Link link = LinkManager.get().builder().setFollower(uid).set
-//            final Optional<User> user = UserManager.get().stream().filter(u -> u.getMail().contains(freeText)).findAny();
-//            return user.map(this::toJson).orElse(fail());
+        return sessionProtected(sessionKey, uid -> {
+            final Optional<Link> link = Optional.ofNullable(LinkManager.get().persist(LinkManager.get().builder().setFollower(uid).setFollows(userId)));
+            return link.map(l -> success()).orElse(fail());
         });
     }
 
     @Override
-    public String onBrowse(String sessionKey, Optional<LocalDateTime> before, Optional<LocalDateTime> after) {
+    public String onBrowse(String sessionKey, Optional<LocalDateTime> from, Optional<LocalDateTime> to) {
         return sessionProtected(sessionKey, uid -> {
+            Predicate<Image> fromPredicate = i -> from.map(e -> i.getUploaded().toLocalDateTime().isAfter(e)).orElse(true);
+            Predicate<Image> toPredicate = i -> to.map(s -> i.getUploaded().toLocalDateTime().isBefore(s)).orElse(true);
             return "{" + formatKey("images") + ":["
-                    + ImageManager.get().stream().map(this::toJson).collect(Collectors.joining(", "))
+                    + ImageManager.get().stream()
+                    .filter(fromPredicate)
+                    .filter(toPredicate)
+                    .map(this::toJson).collect(Collectors.joining(", "))
                     + "]}";
+        });
+    }
+
+    @Override
+    public String onUpdate(String mail, String firstname, String lastName, Optional<String> oAvatar, String sessionKey) {
+        return sessionProtected(sessionKey, uid -> {
+            Optional<User> oUser = UserManager.get().stream().filter(u -> u.getId().equals(uid)).findAny();
+            if (oUser.isPresent()) {
+                final UserBuilder ub = UserManager.get().toBuilder(oUser.get()).setMail(mail).setFirstName(firstname).setLastName(lastName);
+                if (oAvatar.isPresent()) {
+                    ub.setAvatar(oAvatar.get());
+                }
+                Optional<User> oNewUser = Optional.ofNullable(UserManager.get().persist(ub));
+                return oNewUser.map(u -> success()).orElse(fail());
+            }
+            return fail();
         });
     }
 

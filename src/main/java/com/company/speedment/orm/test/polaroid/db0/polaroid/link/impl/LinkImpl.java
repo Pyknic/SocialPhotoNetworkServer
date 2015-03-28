@@ -18,7 +18,7 @@ import javax.annotation.Generated;
 public class LinkImpl implements LinkBuilder {
     
     private Long follower;
-    private String follows;
+    private Long follows;
     
     public LinkImpl() {
         
@@ -41,12 +41,12 @@ public class LinkImpl implements LinkBuilder {
     }
     
     @Override
-    public String getFollows() {
+    public Long getFollows() {
         return follows;
     }
     
     @Override
-    public LinkImpl setFollows(String follows) {
+    public LinkImpl setFollows(Long follows) {
         this.follows = follows;
         return this;
     }

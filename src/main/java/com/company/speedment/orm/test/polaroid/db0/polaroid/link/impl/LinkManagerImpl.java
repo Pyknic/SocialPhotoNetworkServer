@@ -19,7 +19,7 @@ import javax.annotation.Generated;
  * @author Speedment 
  */
 @Generated("Speedment")
-public class LinkManagerImpl extends AbstractSqlManager<java.util.List<?>, Link, LinkBuilder> implements LinkManager {
+public class LinkManagerImpl extends AbstractSqlManager<java.util.List<Long>, Link, LinkBuilder> implements LinkManager {
     
     public LinkManagerImpl() {
         setSqlEntityMapper(this::defaultReadEntity);
@@ -35,21 +35,11 @@ public class LinkManagerImpl extends AbstractSqlManager<java.util.List<?>, Link,
         return new LinkImpl(prototype);
     }
     
-    @Override
-    public Link persist(Link entity) {
-        return entity;
-    }
-    
-    @Override
-    public Link remove(Link entity) {
-        return entity;
-    }
-    
     protected Link defaultReadEntity(ResultSet resultSet) {
         final LinkBuilder builder = builder();
         try {
             builder.setFollower(resultSet.getLong("follower"));
-            builder.setFollows(resultSet.getString("follows"));
+            builder.setFollows(resultSet.getLong("follows"));
         }
         catch (SQLException sqle) {
             throw new RuntimeException(sqle);

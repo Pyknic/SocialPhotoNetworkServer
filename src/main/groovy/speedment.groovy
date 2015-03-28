@@ -113,7 +113,7 @@ dbms {
             }
             column {
                 name = "follows";
-                mapping = String.class;
+                mapping = Long.class;
                 nullable = false;
             }
             primaryKeyColumn {

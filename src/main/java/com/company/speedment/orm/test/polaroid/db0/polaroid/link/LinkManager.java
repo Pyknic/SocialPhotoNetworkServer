@@ -20,10 +20,10 @@ import javax.annotation.Generated;
  * @author Speedment 
  */
 @Generated("Speedment")
-public interface LinkManager extends SqlManager<List<?>, Link, LinkBuilder> {
+public interface LinkManager extends SqlManager<List<Long>, Link, LinkBuilder> {
     
     @Override
-    default List<?> primaryKeyFor(Link entity) {
+    default List<Long> primaryKeyFor(Link entity) {
         return Arrays.asList(entity.getFollower(), entity.getFollows());
     }
     

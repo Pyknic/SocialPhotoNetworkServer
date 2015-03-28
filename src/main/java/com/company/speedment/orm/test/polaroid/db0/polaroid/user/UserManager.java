@@ -51,8 +51,8 @@ public interface UserManager extends SqlManager<Long, User, UserBuilder> {
             case "id" : return entity.getId();
             case "mail" : return entity.getMail();
             case "password" : return entity.getPassword();
-            case "firstName" : return entity.getFirstName();
-            case "lastName" : return entity.getLastName();
+            case "first_name" : return entity.getFirstName();
+            case "last_name" : return entity.getLastName();
             case "avatar" : return entity.getAvatar();
             default : throw new IllegalArgumentException("Unknown column '" + column.getName() + "'.");
         }

@@ -35,16 +35,6 @@ public class ImageManagerImpl extends AbstractSqlManager<Long, Image, ImageBuild
         return new ImageImpl(prototype);
     }
     
-    @Override
-    public Image persist(Image entity) {
-        return entity;
-    }
-    
-    @Override
-    public Image remove(Image entity) {
-        return entity;
-    }
-    
     protected Image defaultReadEntity(ResultSet resultSet) {
         final ImageBuilder builder = builder();
         try {

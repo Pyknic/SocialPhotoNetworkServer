@@ -46,7 +46,7 @@ public abstract class Server extends NanoHTTPD implements ServerAPI {
         System.out.print(
                 method + " '" + uri + "' "
                 + params.entrySet().stream()
-                .map(e -> "\"" + e.getKey() + "\" = \"" + e.getValue() + "\"")
+                .map(e -> "\"" + e.getKey() + "\" = \"" + limitString(e.getValue()) + "\"")
                 .collect(Collectors.joining(", ", "(", ")"))
                 + " -> "
         );
@@ -62,8 +62,8 @@ public abstract class Server extends NanoHTTPD implements ServerAPI {
         final String freeText = parseString(params, "freetext");
         final String firstName = parseString(params, "firstname");
         final String lastName = parseString(params, "lastname");
-        final Optional<LocalDateTime> beforeTimestamp = parseTime(params, "before");
-        final Optional<LocalDateTime> afterTimestamp = parseTime(params, "after");
+        final Optional<LocalDateTime> from = parseTime(params, "from");
+        final Optional<LocalDateTime> to = parseTime(params, "to");
 
         final String msg;
         switch (command) {
@@ -76,7 +76,7 @@ public abstract class Server extends NanoHTTPD implements ServerAPI {
             case "self":
                 msg = onSelf(sessionKey);
                 break;
-            case "uploaded":
+            case "upload":
                 msg = onUpload(title, description, imgData, sessionKey);
                 break;
             case "find":
@@ -86,7 +86,7 @@ public abstract class Server extends NanoHTTPD implements ServerAPI {
                 msg = onFollow(userId, sessionKey);
                 break;
             case "browse":
-                msg = onBrowse(sessionKey, beforeTimestamp, afterTimestamp);
+                msg = onBrowse(sessionKey, from, to);
                 break;
             case "update":
                 msg = onUpdate(mail, firstName, lastName, avatar, sessionKey);
@@ -116,4 +116,16 @@ public abstract class Server extends NanoHTTPD implements ServerAPI {
     private Optional<String> parseOptional(Map<String, String> params, String command) {
         return ofNullable(params.get(command)).map(s -> s.trim()).filter(p -> !p.isEmpty());
     }
+
+    private String limitString(String s) {
+        return limitString(s, 64);
+    }
+
+    private String limitString(String s, int len) {
+        if (s.length() <= len) {
+            return s;
+        }
+        return s.substring(0, len) + "...";
+    }
+
 }

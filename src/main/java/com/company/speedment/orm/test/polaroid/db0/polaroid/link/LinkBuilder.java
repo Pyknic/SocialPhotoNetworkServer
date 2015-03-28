@@ -16,5 +16,5 @@ public interface LinkBuilder extends Link, Buildable<Link> {
     
     LinkBuilder setFollower(Long follower);
     
-    LinkBuilder setFollows(String follows);
+    LinkBuilder setFollows(Long follows);
 }

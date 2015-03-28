@@ -52,7 +52,7 @@ public class PolaroidServer extends Server {
     }
 
     @Override
-    public String onBrowse(String sessionKey, Optional<LocalDateTime> before, Optional<LocalDateTime> after) {
+    public String onBrowse(String sessionKey, Optional<LocalDateTime> from, Optional<LocalDateTime> to) {
         // TODO: Write browse function.
         return "false";
     }

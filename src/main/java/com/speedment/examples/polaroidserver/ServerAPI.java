@@ -21,7 +21,7 @@ public interface ServerAPI {
 
     String onFollow(long userId, String sessionKey);
 
-    String onBrowse(String sessionKey, Optional<LocalDateTime> before, Optional<LocalDateTime> after);
+    String onBrowse(String sessionKey, Optional<LocalDateTime> from, Optional<LocalDateTime> to);
 
     String onUpdate(String mail, String firstname, String lastName, Optional<String> avatar, String sessionKey);
 

@@ -35,16 +35,6 @@ public class UserManagerImpl extends AbstractSqlManager<Long, User, UserBuilder>
         return new UserImpl(prototype);
     }
     
-    @Override
-    public User persist(User entity) {
-        return entity;
-    }
-    
-    @Override
-    public User remove(User entity) {
-        return entity;
-    }
-    
     protected User defaultReadEntity(ResultSet resultSet) {
         final UserBuilder builder = builder();
         try {
