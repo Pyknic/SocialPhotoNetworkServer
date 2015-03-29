@@ -3,7 +3,7 @@ package com.company.speedment.orm.test.polaroid.db0.polaroid.user.impl;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.user.User;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.user.UserBuilder;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.user.UserManager;
-import com.speedment.orm.core.manager.AbstractSqlManager;
+import com.speedment.orm.core.manager.sql.AbstractSqlManager;
 import java.lang.RuntimeException;
 import java.sql.ResultSet;
 import java.sql.SQLException;

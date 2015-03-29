@@ -3,7 +3,7 @@ package com.company.speedment.orm.test.polaroid.db0.polaroid.image.impl;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.image.Image;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.image.ImageBuilder;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.image.ImageManager;
-import com.speedment.orm.core.manager.AbstractSqlManager;
+import com.speedment.orm.core.manager.sql.AbstractSqlManager;
 import java.lang.RuntimeException;
 import java.sql.ResultSet;
 import java.sql.SQLException;

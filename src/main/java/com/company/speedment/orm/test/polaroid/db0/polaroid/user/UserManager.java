@@ -2,11 +2,13 @@ package com.company.speedment.orm.test.polaroid.db0.polaroid.user;
 
 import com.speedment.orm.config.model.Column;
 import com.speedment.orm.config.model.Table;
-import com.speedment.orm.core.manager.SqlManager;
+import com.speedment.orm.core.manager.sql.SqlManager;
 import com.speedment.orm.platform.Platform;
 import com.speedment.orm.platform.component.ManagerComponent;
 import com.speedment.orm.platform.component.ProjectComponent;
 import java.lang.IllegalArgumentException;
+import java.lang.Long;
+import java.lang.String;
 import javax.annotation.Generated;
 
 /**
@@ -58,8 +60,21 @@ public interface UserManager extends SqlManager<Long, User, UserBuilder> {
         }
     }
     
+    @Override
+    default void set(UserBuilder entity, Column column, Object value) {
+        switch (column.getName()) {
+            case "id" : entity.setId((Long) value); break;
+            case "mail" : entity.setMail((String) value); break;
+            case "password" : entity.setPassword((String) value); break;
+            case "first_name" : entity.setFirstName((String) value); break;
+            case "last_name" : entity.setLastName((String) value); break;
+            case "avatar" : entity.setAvatar((String) value); break;
+            default : throw new IllegalArgumentException("Unknown column '" + column.getName() + "'.");
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     static UserManager get() {
-        return (UserManager) Platform.get().get(ManagerComponent.class).manager(UserManager.class);
+        return Platform.get().get(ManagerComponent.class).manager(UserManager.class);
     }
 }

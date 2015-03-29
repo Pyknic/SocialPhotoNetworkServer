@@ -3,7 +3,7 @@ package com.company.speedment.orm.test.polaroid.db0.polaroid.link.impl;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.link.Link;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.link.LinkBuilder;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.link.LinkManager;
-import com.speedment.orm.core.manager.AbstractSqlManager;
+import com.speedment.orm.core.manager.sql.AbstractSqlManager;
 import java.lang.RuntimeException;
 import java.sql.ResultSet;
 import java.sql.SQLException;

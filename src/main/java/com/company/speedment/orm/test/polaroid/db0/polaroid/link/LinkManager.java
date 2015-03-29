@@ -2,11 +2,12 @@ package com.company.speedment.orm.test.polaroid.db0.polaroid.link;
 
 import com.speedment.orm.config.model.Column;
 import com.speedment.orm.config.model.Table;
-import com.speedment.orm.core.manager.SqlManager;
+import com.speedment.orm.core.manager.sql.SqlManager;
 import com.speedment.orm.platform.Platform;
 import com.speedment.orm.platform.component.ManagerComponent;
 import com.speedment.orm.platform.component.ProjectComponent;
 import java.lang.IllegalArgumentException;
+import java.lang.Long;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Generated;
@@ -56,8 +57,17 @@ public interface LinkManager extends SqlManager<List<Long>, Link, LinkBuilder> {
         }
     }
     
+    @Override
+    default void set(LinkBuilder entity, Column column, Object value) {
+        switch (column.getName()) {
+            case "follower" : entity.setFollower((Long) value); break;
+            case "follows" : entity.setFollows((Long) value); break;
+            default : throw new IllegalArgumentException("Unknown column '" + column.getName() + "'.");
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     static LinkManager get() {
-        return (LinkManager) Platform.get().get(ManagerComponent.class).manager(LinkManager.class);
+        return Platform.get().get(ManagerComponent.class).manager(LinkManager.class);
     }
 }

@@ -33,6 +33,7 @@ dbms {
                 name = "id";
                 mapping = Long.class;
                 nullable = false;
+                autoincrement = true;
             }
             column {
                 name = "mail";
@@ -66,6 +67,7 @@ dbms {
                 name = "id";
                 mapping = Long.class;
                 nullable = false;
+                autoincrement = true;
             }
             column {
                 name = "uploader";

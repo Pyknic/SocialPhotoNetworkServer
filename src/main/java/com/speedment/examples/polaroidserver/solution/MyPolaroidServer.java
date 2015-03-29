@@ -27,7 +27,7 @@ import java.util.stream.Stream;
  */
 public class MyPolaroidServer extends PolaroidServer {
 
-    private static final String NULL = "null";
+    private static final String NULL = "\"\"";
 
     private final Map<String, Long> sessionMap;
 
@@ -73,8 +73,11 @@ public class MyPolaroidServer extends PolaroidServer {
     @Override
     public String onFind(String freeText, String sessionKey) {
         return sessionProtected(sessionKey, uid -> {
-            final Optional<User> user = UserManager.get().stream().filter(u -> u.getMail().contains(freeText)).findAny();
-            return user.map(this::toJson).orElse(fail());
+            return "{" + formatKey("users") + ":["
+                    + UserManager.get().stream()
+                    .filter(u -> u.getMail().contains(freeText))
+                    .map(this::toJson).collect(Collectors.joining(", "))
+                    + "]}";
         });
     }
 
@@ -109,8 +112,8 @@ public class MyPolaroidServer extends PolaroidServer {
                 if (oAvatar.isPresent()) {
                     ub.setAvatar(oAvatar.get());
                 }
-                Optional<User> oNewUser = Optional.ofNullable(UserManager.get().persist(ub));
-                return oNewUser.map(u -> success()).orElse(fail());
+                Optional<User> oNewUser = Optional.ofNullable(UserManager.get().update(ub));
+                return oNewUser.map(this::toJson).orElse(fail());
             }
             return fail();
         });

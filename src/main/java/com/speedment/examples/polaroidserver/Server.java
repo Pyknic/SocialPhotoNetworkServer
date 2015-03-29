@@ -1,5 +1,6 @@
 package com.speedment.examples.polaroidserver;
 
+import com.speedment.orm.db.impl.AbstractRelationalDbmsHandler;
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -8,6 +9,8 @@ import java.util.Map;
 import java.util.Optional;
 import static java.util.Optional.ofNullable;
 import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  *
@@ -15,11 +18,13 @@ import java.util.stream.Collectors;
  */
 public abstract class Server extends NanoHTTPD implements ServerAPI {
 
+    private static final Logger LOGGER = LogManager.getLogger(Server.class);
+
     private static final int PORT = 8080;
 
     public Server() {
         super(PORT);
-        System.out.println(getClass().getSimpleName() + " running on http://127.0.0.1:" + PORT + ".");
+        LOGGER.info(" running on http://127.0.0.1:" + PORT + ".");
     }
 
     @Override
@@ -43,8 +48,7 @@ public abstract class Server extends NanoHTTPD implements ServerAPI {
 
         final Map<String, String> params = session.getParms();
 
-        System.out.print(
-                method + " '" + uri + "' "
+        LOGGER.debug(method + " '" + uri + "' "
                 + params.entrySet().stream()
                 .map(e -> "\"" + e.getKey() + "\" = \"" + limitString(e.getValue()) + "\"")
                 .collect(Collectors.joining(", ", "(", ")"))
@@ -96,7 +100,7 @@ public abstract class Server extends NanoHTTPD implements ServerAPI {
                 break;
         }
 
-        System.out.println("\"" + msg + "\"");
+        LOGGER.debug("\"" + msg + "\"");
 
         return new NanoHTTPD.Response(msg);
     }
