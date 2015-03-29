@@ -2,10 +2,10 @@ package com.company.speedment.orm.test.polaroid.db0.polaroid.image;
 
 import com.company.speedment.orm.test.polaroid.db0.polaroid.user.User;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.user.UserManager;
-import com.speedment.orm.platform.Platform;
-import com.speedment.orm.platform.component.ManagerComponent;
 import java.sql.Timestamp;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 import javax.annotation.Generated;
 
 /**
@@ -32,8 +32,31 @@ public interface Image {
     Timestamp getUploaded();
     
     default User findUploader() {
-        return Platform.get().get(ManagerComponent.class)
-                .manager(UserManager.class)
+        return UserManager.get()
                 .stream().filter(user -> Objects.equals(this.getUploader(), user.getId())).findAny().get();
+    }
+    
+    static ImageBuilder builder() {
+        return ImageManager.get().builder();
+    }
+    
+    default ImageBuilder toBuilder() {
+        return ImageManager.get().toBuilder(this);
+    }
+    
+    static Stream<Image> stream() {
+        return ImageManager.get().stream();
+    }
+    
+    default Optional<Image> persist() {
+        return ImageManager.get().persist(this);
+    }
+    
+    default Optional<Image> update() {
+        return ImageManager.get().update(this);
+    }
+    
+    default Optional<Image> remove() {
+        return ImageManager.get().remove(this);
     }
 }

@@ -2,9 +2,9 @@ package com.company.speedment.orm.test.polaroid.db0.polaroid.link;
 
 import com.company.speedment.orm.test.polaroid.db0.polaroid.user.User;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.user.UserManager;
-import com.speedment.orm.platform.Platform;
-import com.speedment.orm.platform.component.ManagerComponent;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 import javax.annotation.Generated;
 
 /**
@@ -23,14 +23,36 @@ public interface Link {
     Long getFollows();
     
     default User findFollower() {
-        return Platform.get().get(ManagerComponent.class)
-                .manager(UserManager.class)
+        return UserManager.get()
                 .stream().filter(user -> Objects.equals(this.getFollower(), user.getId())).findAny().get();
     }
     
     default User findFollows() {
-        return Platform.get().get(ManagerComponent.class)
-                .manager(UserManager.class)
+        return UserManager.get()
                 .stream().filter(user -> Objects.equals(this.getFollows(), user.getId())).findAny().get();
+    }
+    
+    static LinkBuilder builder() {
+        return LinkManager.get().builder();
+    }
+    
+    default LinkBuilder toBuilder() {
+        return LinkManager.get().toBuilder(this);
+    }
+    
+    static Stream<Link> stream() {
+        return LinkManager.get().stream();
+    }
+    
+    default Optional<Link> persist() {
+        return LinkManager.get().persist(this);
+    }
+    
+    default Optional<Link> update() {
+        return LinkManager.get().update(this);
+    }
+    
+    default Optional<Link> remove() {
+        return LinkManager.get().remove(this);
     }
 }

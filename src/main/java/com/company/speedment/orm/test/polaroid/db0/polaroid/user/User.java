@@ -4,9 +4,8 @@ import com.company.speedment.orm.test.polaroid.db0.polaroid.image.Image;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.image.ImageManager;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.link.Link;
 import com.company.speedment.orm.test.polaroid.db0.polaroid.link.LinkManager;
-import com.speedment.orm.platform.Platform;
-import com.speedment.orm.platform.component.ManagerComponent;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Generated;
@@ -35,20 +34,17 @@ public interface User {
     String getAvatar();
     
     default Stream<Image> imagesByUploader() {
-        return Platform.get().get(ManagerComponent.class)
-                .manager(ImageManager.class)
+        return ImageManager.get()
                 .stream().filter(image -> Objects.equals(this.getId(), image.getUploader()));
     }
     
     default Stream<Link> linksByFollower() {
-        return Platform.get().get(ManagerComponent.class)
-                .manager(LinkManager.class)
+        return LinkManager.get()
                 .stream().filter(link -> Objects.equals(this.getId(), link.getFollower()));
     }
     
     default Stream<Link> linksByFollows() {
-        return Platform.get().get(ManagerComponent.class)
-                .manager(LinkManager.class)
+        return LinkManager.get()
                 .stream().filter(link -> Objects.equals(this.getId(), link.getFollows()));
     }
     
@@ -58,5 +54,29 @@ public interface User {
     
     default Stream<Link> links() {
         return Stream.of(linksByFollower(), linksByFollows()).flatMap(Function.identity()).distinct();
+    }
+    
+    static UserBuilder builder() {
+        return UserManager.get().builder();
+    }
+    
+    default UserBuilder toBuilder() {
+        return UserManager.get().toBuilder(this);
+    }
+    
+    static Stream<User> stream() {
+        return UserManager.get().stream();
+    }
+    
+    default Optional<User> persist() {
+        return UserManager.get().persist(this);
+    }
+    
+    default Optional<User> update() {
+        return UserManager.get().update(this);
+    }
+    
+    default Optional<User> remove() {
+        return UserManager.get().remove(this);
     }
 }
