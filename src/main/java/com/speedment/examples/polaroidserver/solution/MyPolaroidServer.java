@@ -75,7 +75,7 @@ public class MyPolaroidServer extends PolaroidServer {
     }
 
     private boolean search(User user, String search) {
-        return (user.getMail() + Objects.toString(user.getFirstName()) + Objects.toString(user.getLastName())).contains(search);
+        return (user.getMail().toLowerCase() + " " + Objects.toString(user.getFirstName()).toLowerCase() + " " + Objects.toString(user.getLastName()).toLowerCase()).contains(search.toLowerCase());
     }
 
     @Override
@@ -115,11 +115,7 @@ public class MyPolaroidServer extends PolaroidServer {
     }
 
     public String sessionProtected(String sessionKey, Function<Long, String> mapper) {
-        final Long userId = sessionMap.get(sessionKey);
-        if (userId != null) {
-            return mapper.apply(userId);
-        }
-        return fail();
+        return Optional.ofNullable(sessionMap.get(sessionKey)).map(mapper::apply).orElse(fail());
     }
 
     private String newSession(User user) {
