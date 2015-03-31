@@ -1,135 +1,76 @@
 package com.speedment.examples.polaroidserver;
 
-import com.speedment.orm.db.impl.AbstractRelationalDbmsHandler;
-import fi.iki.elonen.NanoHTTPD;
-import java.io.IOException;
+import fi.iki.elonen.ServerRunner;
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
-import static java.util.Optional.ofNullable;
-import java.util.stream.Collectors;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.util.Random;
 
 /**
  *
  * @author Emil Forslund
  */
-public abstract class Server extends NanoHTTPD implements ServerAPI {
+public class Server extends ServerBase {
 
-    private static final Logger LOGGER = LogManager.getLogger(Server.class);
+    protected final Random random = new SecureRandom();
 
-    private static final int PORT = 8080;
-
-    public Server() {
-        super(PORT);
-        LOGGER.info(" running on http://127.0.0.1:" + PORT + ".");
+    @Override
+    public String onRegister(String mail, String password) {
+        // TODO: Write register function.
+        return "false";
     }
 
     @Override
-    public NanoHTTPD.Response serve(NanoHTTPD.IHTTPSession session) {
-        final Map<String, String> files = new HashMap<>();
-        final NanoHTTPD.Method method = session.getMethod();
-        final String uri = session.getUri();
-        final String command = uri.substring(uri.indexOf("/") + 1);
-
-        if (Method.PUT.equals(method) || Method.POST.equals(method)) {
-            try {
-                session.parseBody(files);
-            } catch (IOException ex) {
-                return new Response(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT,
-                        "SERVER INTERNAL ERROR: IOException: " + ex.getMessage()
-                );
-            } catch (ResponseException ex) {
-                return new Response(ex.getStatus(), MIME_PLAINTEXT, ex.getMessage());
-            }
-        }
-
-        final Map<String, String> params = session.getParms();
-
-        LOGGER.debug(method + " '" + uri + "' "
-                + params.entrySet().stream()
-                .map(e -> "\"" + e.getKey() + "\" = \"" + limitString(e.getValue()) + "\"")
-                .collect(Collectors.joining(", ", "(", ")"))
-                + " -> "
-        );
-
-        final long userId = parseLong(params, "userid");
-        final String mail = parseString(params, "mail");
-        final String password = parseString(params, "password");
-        final String sessionKey = parseString(params, "sessionkey");
-        final String title = parseString(params, "title");
-        final String description = parseString(params, "description");
-        final String imgData = parseString(params, "imgdata");
-        final Optional<String> avatar = parseOptional(params, "avatar");
-        final String freeText = parseString(params, "freetext");
-        final String firstName = parseString(params, "firstname");
-        final String lastName = parseString(params, "lastname");
-        final Optional<LocalDateTime> from = parseTime(params, "from");
-        final Optional<LocalDateTime> to = parseTime(params, "to");
-
-        final String msg;
-        switch (command) {
-            case "register":
-                msg = onRegister(mail, password);
-                break;
-            case "login":
-                msg = onLogin(mail, password);
-                break;
-            case "self":
-                msg = onSelf(sessionKey);
-                break;
-            case "upload":
-                msg = onUpload(title, description, imgData, sessionKey);
-                break;
-            case "find":
-                msg = onFind(freeText, sessionKey);
-                break;
-            case "follow":
-                msg = onFollow(userId, sessionKey);
-                break;
-            case "browse":
-                msg = onBrowse(sessionKey, from, to);
-                break;
-            case "update":
-                msg = onUpdate(mail, firstName, lastName, avatar, sessionKey);
-                break;
-            default:
-                msg = "Unknown command.";
-                break;
-        }
-
-        LOGGER.debug("\"" + msg + "\"");
-
-        return new NanoHTTPD.Response(msg);
+    public String onLogin(String mail, String password) {
+        // TODO: Write login function.
+        return "false";
     }
 
-    private long parseLong(Map<String, String> params, String command) {
-        return parseOptional(params, command).map(s -> Long.parseLong(s)).orElse(-1L);
+    @Override
+    public String onSelf(String sessionKey) {
+        // TODO: Write self function.
+        return "false";
     }
 
-    private Optional<LocalDateTime> parseTime(Map<String, String> params, String command) {
-        return parseOptional(params, command).map(s -> LocalDateTime.parse(s));
+    @Override
+    public String onUpload(String title, String description, String imgData, String sessionKey) {
+        // TODO: Write upload function.
+        return "false";
     }
 
-    private String parseString(Map<String, String> params, String command) {
-        return parseOptional(params, command).orElse("");
+    @Override
+    public String onFind(String freeText, String sessionKey) {
+        // TODO: Write find function.
+        return "false";
     }
 
-    private Optional<String> parseOptional(Map<String, String> params, String command) {
-        return ofNullable(params.get(command)).map(s -> s.trim()).filter(p -> !p.isEmpty());
+    @Override
+    public String onFollow(long userId, String sessionKey) {
+        // TODO: Write follow function.
+        return "false";
     }
 
-    private String limitString(String s) {
-        return limitString(s, 64);
+    @Override
+    public String onBrowse(String sessionKey, Optional<LocalDateTime> from, Optional<LocalDateTime> to) {
+        // TODO: Write browse function.
+        return "false";
     }
 
-    private String limitString(String s, int len) {
-        if (s.length() <= len) {
-            return s;
-        }
-        return s.substring(0, len) + "...";
+    @Override
+    public String onUpdate(String mail, String firstname, String lastName, Optional<String> avatar, String sessionKey) {
+        // TODO: Write update profile
+        return "false";
     }
 
+    protected String nextSessionId() {
+        return new BigInteger(130, random).toString(32);
+    }
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String... args) {
+        ServerRunner.run(Server.class);
+    }
 }
