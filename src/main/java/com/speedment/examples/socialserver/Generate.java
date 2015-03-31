@@ -19,8 +19,10 @@ package com.speedment.examples.socialserver;
 import com.speedment.orm.code.model.java.MainGenerator;
 import com.speedment.orm.config.model.Project;
 import com.speedment.orm.config.model.impl.utils.GroovyParser;
+import com.speedment.orm.gui.MainApp;
 import java.io.IOException;
 import java.nio.file.Paths;
+import static javafx.application.Application.launch;
 
 /**
  *
@@ -33,8 +35,14 @@ public class Generate {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
-        final Project p = GroovyParser.projectFromGroovy(Paths.get("src/main/groovy/", "speedment.groovy"));
-        final MainGenerator instance = new MainGenerator();
-        instance.accept(p);
+        boolean javaFx = true;
+
+        if (javaFx) {
+            launch(MainApp.class);
+        } else {
+            final Project p = GroovyParser.projectFromGroovy(Paths.get("src/main/groovy/", "speedment.groovy"));
+            new MainGenerator().accept(p);
+        }
+
     }
 }
