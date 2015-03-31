@@ -1,4 +1,4 @@
-package com.speedment.examples.polaroidserver;
+package com.speedment.examples.socialserver;
 
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;

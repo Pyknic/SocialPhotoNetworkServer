@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.speedment.examples.polaroidserver;
+package com.speedment.examples.socialserver;
 
 import com.speedment.orm.code.model.java.MainGenerator;
 import com.speedment.orm.config.model.Project;

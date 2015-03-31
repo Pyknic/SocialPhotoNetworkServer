@@ -1,4 +1,4 @@
-package com.speedment.examples.polaroidserver;
+package com.speedment.examples.socialserver;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
