@@ -1,6 +1,6 @@
 package com.speedment.examples.socialserver;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.Optional;
 
 /**
@@ -21,7 +21,7 @@ public interface ServerAPI {
 
     String onFollow(long userId, String sessionKey);
 
-    String onBrowse(String sessionKey, Optional<LocalDateTime> from, Optional<LocalDateTime> to);
+    String onBrowse(String sessionKey, Optional<Timestamp> from, Optional<Timestamp> to);
 
     String onUpdate(String mail, String firstName, String lastName, Optional<String> avatar, String sessionKey);
 

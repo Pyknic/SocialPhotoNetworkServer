@@ -3,7 +3,7 @@ package com.speedment.examples.socialserver;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.Random;
 
@@ -52,7 +52,7 @@ public class Server extends ServerBase {
     }
 
     @Override
-    public String onBrowse(String sessionKey, Optional<LocalDateTime> from, Optional<LocalDateTime> to) {
+    public String onBrowse(String sessionKey, Optional<Timestamp> from, Optional<Timestamp> to) {
         // TODO: Write browse function.
         return "false";
     }
