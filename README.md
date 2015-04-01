@@ -32,8 +32,8 @@ An example of a backend for the Social Photo Network written to illustrate the S
 {
     "id" : <long>,
     "mail" : "<string>",
-    "firstname" : "<string>",
-    "lastname" : "<string>",
+    "firstName" : "<string>",
+    "lastName" : "<string>",
     "avatar" : "<base64>"
 }
 ```
@@ -50,8 +50,8 @@ An example of a backend for the Social Photo Network written to illustrate the S
         {
             "id" : <long>,
             "mail" : "<string>",
-            "firstname" : "<string>",
-            "lastname" : "<string>",
+            "firstName" : "<string>",
+            "lastName" : "<string>",
             "avatar" : "<base64>"
         }, (...)
     ]
@@ -80,11 +80,11 @@ An example of a backend for the Social Photo Network written to illustrate the S
             "description" : "<string>",
             "imgdata" : "<base64>"
             "uploaded" : "<localdatetime>",
-            "uploadedby" : {
+            "uploader" : {
                 "id" : <long>,
                 "mail" : "<string>",
-                "firstname" : "<string>",
-                "lastname" : "<string>",
+                "firstName" : "<string>",
+                "lastName" : "<string>",
                 "avatar" : "<base64>"
             }
         }, (...)
@@ -102,8 +102,8 @@ An example of a backend for the Social Photo Network written to illustrate the S
 {
     "id" : <long>,
     "mail" : "<string>",
-    "firstname" : "<string>",
-    "lastname" : "<string>",
+    "firstName" : "<string>",
+    "lastName" : "<string>",
     "avatar" : "<base64>"
 }
 ```
