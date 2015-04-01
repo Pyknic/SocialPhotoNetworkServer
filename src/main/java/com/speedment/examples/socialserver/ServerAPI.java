@@ -23,6 +23,6 @@ public interface ServerAPI {
 
     String onBrowse(String sessionKey, Optional<LocalDateTime> from, Optional<LocalDateTime> to);
 
-    String onUpdate(String mail, String firstname, String lastName, Optional<String> avatar, String sessionKey);
+    String onUpdate(String mail, String firstName, String lastName, Optional<String> avatar, String sessionKey);
 
 }
