@@ -109,7 +109,7 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
     }
 
     private Optional<Timestamp> parseTime(Map<String, String> params, String command) {
-        return parseOptional(params, command).map(s -> Timestamp.valueOf(s));
+        return parseOptional(params, command).map(s -> Timestamp.valueOf(s.replaceAll("T", " ")));
     }
 
     private String parseString(Map<String, String> params, String command) {
