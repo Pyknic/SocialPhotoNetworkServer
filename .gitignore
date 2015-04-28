@@ -1,3 +1,5 @@
 nb-configuration.xml
 nbactions.xml
 target/
+src/main/java/com/company/
+settings.properties
