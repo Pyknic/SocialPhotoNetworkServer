@@ -51,20 +51,41 @@ public class Server extends ServerBase {
     @Override
     public String onSelf(String sessionKey) {
         return getSession(sessionKey)
-			.map(u -> u.toJson())
+			.map(User::toJson)
 			.orElse("false");
     }
 
     @Override
     public String onUpload(String title, String description, String imgData, String sessionKey) {
-		// TODO Implement toUpload
-		return "false";
+		return getSession(sessionKey).map(user -> 
+			Image.builder()
+				.setTitle(title)
+				.setDescription(description)
+				.setImgData(imgData)
+				.setUploader(user.getId())
+				.setUploaded(new Timestamp(System.currentTimeMillis()))
+				.persist()
+		).map(img -> "true")
+			.orElse("false");
     }
 
     @Override
     public String onFind(String freeText, String sessionKey) {
 		// TODO: Implement onFind
-		return "{\"users\":[]}";
+		if (getSession(sessionKey).isPresent()) {
+			return "{\"users\":[" +
+				User.stream()
+					.filter(u -> u.getFirstName().startsWith(freeText) ||
+								 u.getLastName().startsWith(freeText) ||
+								 u.getMail().startsWith(freeText)
+					)
+					.map(User::toJson)
+					.collect(joining(", "))
+			+ "]}";
+		} else {
+			return "{\"users:\":[]}";
+		}
+		
     }
 
     @Override
