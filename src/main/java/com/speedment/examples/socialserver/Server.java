@@ -5,6 +5,7 @@ import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.Image;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.link.Link;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.User;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserBuilder;
+import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserField;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -57,12 +58,12 @@ public class Server extends ServerBase {
 
     @Override
     public String onUpload(String title, String description, String imgData, String sessionKey) {
-		return getSession(sessionKey).map(user -> 
+		return getSession(sessionKey).map(me -> 
 			Image.builder()
 				.setTitle(title)
 				.setDescription(description)
 				.setImgData(imgData)
-				.setUploader(user.getId())
+				.setUploader(me.getId())
 				.setUploaded(new Timestamp(System.currentTimeMillis()))
 				.persist()
 		).map(img -> "true")
@@ -71,27 +72,34 @@ public class Server extends ServerBase {
 
     @Override
     public String onFind(String freeText, String sessionKey) {
-		// TODO: Implement onFind
-		if (getSession(sessionKey).isPresent()) {
-			return "{\"users\":[" +
+		return getSession(sessionKey).map(me -> 
+			"{\"users\":[" +
 				User.stream()
-					.filter(u -> u.getFirstName().startsWith(freeText) ||
-								 u.getLastName().startsWith(freeText) ||
-								 u.getMail().startsWith(freeText)
-					)
+                    // If the freetext matches any field.
+                    .filter(UserField.FIRSTNAME.startsWith(freeText))
+                    .filter(UserField.LASTNAME.startsWith(freeText))
+                    .filter(UserField.MAIL.startsWith(freeText))
+                    
+                    // And no link exist.
+                    .filter(them -> !them.linksByFollower()
+                        .anyMatch(link -> me.getId().equals(link.getFollows()))
+                    )
+
 					.map(User::toJson)
 					.collect(joining(", "))
-			+ "]}";
-		} else {
-			return "{\"users:\":[]}";
-		}
-		
+			+ "]}"
+        ).orElse("{\"users:\":[]}");
     }
 
     @Override
     public String onFollow(long userId, String sessionKey) {
-		// TODO: Implement onFollow
-		return "false";
+        return getSession(sessionKey)
+            .map(me -> Link.builder()
+                .setFollower(me.getId())
+                .setFollows(userId)
+                .persist()
+            ).map(l -> "true")
+             .orElse("false");
     }
 
     @Override
@@ -104,10 +112,12 @@ public class Server extends ServerBase {
     }
 
     @Override
-    public String onUpdate(String mail, String firstname, String lastName, Optional<String> avatar, String sessionKey) {
+    public String onUpdate(String mail, String firstname, String lastName, 
+        Optional<String> avatar, String sessionKey) {
+        
 		return getSession(sessionKey)
-			.flatMap(u -> {
-				final UserBuilder ub = u.toBuilder()
+			.flatMap(me -> {
+				final UserBuilder ub = me.toBuilder()
 					.setMail(mail)
 					.setFirstName(firstname)
 					.setLastName(lastName);
