@@ -2,7 +2,6 @@ package com.speedment.examples.socialserver;
 
 import com.company.speedment.orm.test.project_1.Project1Application;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.Image;
-import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.ImageField;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.link.Link;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.User;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserBuilder;
