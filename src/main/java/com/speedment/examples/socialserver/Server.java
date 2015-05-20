@@ -2,6 +2,7 @@ package com.speedment.examples.socialserver;
 
 import com.company.speedment.orm.test.project_1.Project1Application;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.Image;
+import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.ImageField;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.link.Link;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.User;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserBuilder;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import static java.util.stream.Collectors.joining;
+import java.util.stream.Stream;
 
 /**
  *
@@ -76,13 +78,15 @@ public class Server extends ServerBase {
 			"{\"users\":[" +
 				User.stream()
                     // If the freetext matches any field.
-                    .filter(UserField.FIRSTNAME.startsWith(freeText))
-                    .filter(UserField.LASTNAME.startsWith(freeText))
-                    .filter(UserField.MAIL.startsWith(freeText))
+                    .filter(
+                        UserField.FIRSTNAME.startsWith(freeText).or(
+                        UserField.LASTNAME.startsWith(freeText)).or(
+                        UserField.MAIL.startsWith(freeText))
+                    )
                     
                     // And no link exist.
-                    .filter(them -> !them.linksByFollower()
-                        .anyMatch(link -> me.getId().equals(link.getFollows()))
+                    .filter(them -> !me.linksByFollower()
+                        .anyMatch(link -> them.getId().equals(link.getFollows()))
                     )
 
 					.map(User::toJson)
@@ -104,11 +108,25 @@ public class Server extends ServerBase {
 
     @Override
     public String onBrowse(String sessionKey, Optional<Timestamp> from, Optional<Timestamp> to) {
-        return "{\"images\":[" + Image.stream()
-			.filter(img -> !from.isPresent() || img.getUploaded().after(from.get()))
-			.filter(img -> !to.isPresent()   || img.getUploaded().before(to.get()))
-			.map(img -> img.toJson())
-			.collect(joining(", ")) + "]}";
+        return getSession(sessionKey).map(me -> 
+            "{\"images\":[" + 
+            
+            // Stream us and all the people we follow
+            Stream.concat(
+                Stream.of(me),
+                me.linksByFollower().map(l -> l.findFollows()))
+                
+                // Get all the images uploaded by these users.
+                .flatMap(User::images)
+                
+                // Filter the pictures uploaded since the last poll
+                .filter(img -> !from.isPresent() || img.getUploaded().after(from.get()))
+                .filter(img -> !to.isPresent()   || img.getUploaded().before(to.get()))
+                
+                // Convert them to json.
+                .map(img -> img.toJson())
+                .collect(joining(", ")) + "]}"
+        ).orElse("false");
     }
 
     @Override
