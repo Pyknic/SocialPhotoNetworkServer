@@ -18,6 +18,13 @@
             <artifactId>speedment</artifactId>
             <version>0.4.1-rc1-SNAPSHOT</version>
         </dependency>
+		    
+		<dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.35</version>
+        </dependency>
+		
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -16,10 +16,10 @@
  */
 package com.speedment.examples.socialserver;
 
-import com.speedment.orm.code.model.java.MainGenerator;
-import com.speedment.orm.config.model.Project;
-import com.speedment.orm.config.model.impl.utils.GroovyParser;
-import com.speedment.orm.gui.MainApp;
+import com.speedment.core.code.model.java.MainGenerator;
+import com.speedment.core.config.model.Project;
+import com.speedment.core.config.model.impl.utils.GroovyParser;
+import com.speedment.gui.MainApp;
 import java.io.IOException;
 import java.nio.file.Paths;
 import static javafx.application.Application.launch;
