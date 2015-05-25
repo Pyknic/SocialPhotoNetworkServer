@@ -3,11 +3,13 @@ package com.speedment.examples.socialserver;
 import com.company.speedment.orm.test.project_1.Project1Application;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.Image;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.ImageField;
+import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.ImageManager;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.link.Link;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.link.LinkField;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.User;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserBuilder;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserField;
+import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserManager;
 import com.speedment.util.json.Json;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
@@ -136,13 +138,11 @@ public class Server extends ServerBase {
                         return total.size() - intersection.size();
                     })
 
-					.map(u -> u.toJson(new Json<User>()
-                        .put(UserField.ID)
-                        .put(UserField.MAIL)
-                        .put(UserField.FIRSTNAME)
-                        .put(UserField.LASTNAME)
-                        .put(UserField.AVATAR)
-                    ))
+					.map(u -> UserManager.get()
+                        .toJson()
+                        .remove(UserField.PASSWORD)
+                        .build(u)
+                    )
                     
 					.collect(joining(", "))
 			+ "]}"
@@ -165,12 +165,12 @@ public class Server extends ServerBase {
         return getLoggedIn(sessionKey).map(me -> 
             "{\"images\":[" + 
             
-            // Stream us and all the people we follow
+            // Stream us and allFrom the people we follow
             Stream.concat(
                 Stream.of(me),
                 me.linksByFollower().map(Link::findFollows))
                 
-                // Get all the images uploaded by these users.
+                // Get allFrom the images uploaded by these users.
                 .flatMap(User::images)
                 
                 // Filter the pictures uploaded since the last poll
@@ -178,14 +178,12 @@ public class Server extends ServerBase {
                 .filter(img -> !to.isPresent()   || img.getUploaded().before(to.get()))
                 
                 // Convert them to json.
-                .map(img -> img.toJson(new Json<Image>()
-                    .put(ImageField.ID)
-                    .put(ImageField.TITLE)
-                    .put(ImageField.DESCRIPTION)
-                    .put(ImageField.IMGDATA)
-                    .put(ImageField.UPLOADED)
-                    .put(ImageField.UPLOADER, USER_EXCEPT_PASSWORD)
-                ))
+                .map(img -> Json.allFrom(ImageManager.get())
+                    .put(ImageField.UPLOADER, 
+                        Json.allFrom(UserManager.get())
+                            .remove(UserField.PASSWORD)
+                    ).build(img)
+                )
                 
                 .collect(joining(", ")) + "]}"
         ).orElse("false");
@@ -205,20 +203,17 @@ public class Server extends ServerBase {
 				avatar.ifPresent(a -> ub.setAvatar(a));
 					
 				return ub.update();
-			}).map(usr -> usr.toJson(USER_EXCEPT_PASSWORD))
+			}).map(usr -> Json
+                .allFrom(UserManager.get())
+                .remove(UserField.PASSWORD)
+                .build(usr)
+            )
             .orElse("false");
     }
 
     protected String nextSessionId() {
         return new BigInteger(130, random).toString(32);
     }
-    
-    private final static Json<User> USER_EXCEPT_PASSWORD = new Json<User>()
-        .put(UserField.ID)
-        .put(UserField.MAIL)
-        .put(UserField.FIRSTNAME)
-        .put(UserField.LASTNAME)
-        .put(UserField.AVATAR);
 
     /**
      * @param args the command line arguments
