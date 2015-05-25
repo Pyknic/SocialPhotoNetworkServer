@@ -2,18 +2,24 @@ package com.speedment.examples.socialserver;
 
 import com.company.speedment.orm.test.project_1.Project1Application;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.Image;
+import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.ImageField;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.link.Link;
+import com.company.speedment.orm.test.project_1.db0.socialnetwork.link.LinkField;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.User;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserBuilder;
 import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserField;
+import com.speedment.util.json.Json;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 import static java.util.stream.Collectors.joining;
 import java.util.stream.Stream;
 
@@ -29,6 +35,20 @@ public class Server extends ServerBase {
 	public Server() {
 		new Project1Application().start();
 	}
+    
+    private String createSession(User user) {
+		final String key = nextSessionId();
+		sessions.put(key, user.getId());
+		return key;
+	}
+	
+	private Optional<User> getLoggedIn(String key) {
+        return Optional.ofNullable(sessions.get(key))
+            .flatMap(id -> User.stream()
+                .filter(UserField.ID.equal(id))
+                .findAny()
+            );
+	}
 
     @Override
     public String onRegister(String mail, String password) {
@@ -36,44 +56,45 @@ public class Server extends ServerBase {
 			.setMail(mail)
 			.setPassword(password)
 			.persist()
-			.map(this::newSession)
+			.map(this::createSession)
 			.orElse("false");
     }
 
     @Override
     public String onLogin(String mail, String password) {
         return User.stream()
-			.filter(u -> mail.equals(u.getMail()))
-			.filter(u -> password.equals(u.getPassword()))
-			.map(this::newSession)
-			.findAny()
-			.orElse("false");
+            .filter(UserField.MAIL.equalIgnoreCase(mail))
+            .filter(UserField.PASSWORD.equal(password))
+            .findAny()
+            .map(this::createSession)
+            .orElse("false");
     }
 
     @Override
     public String onSelf(String sessionKey) {
-        return getSession(sessionKey)
+        return getLoggedIn(sessionKey)
 			.map(User::toJson)
 			.orElse("false");
     }
 
     @Override
     public String onUpload(String title, String description, String imgData, String sessionKey) {
-		return getSession(sessionKey).map(me -> 
-			Image.builder()
-				.setTitle(title)
-				.setDescription(description)
-				.setImgData(imgData)
-				.setUploader(me.getId())
-				.setUploaded(new Timestamp(System.currentTimeMillis()))
-				.persist()
-		).map(img -> "true")
-			.orElse("false");
+		return getLoggedIn(sessionKey)
+            .flatMap(me -> 
+                Image.builder()
+                    .setTitle(title)
+                    .setDescription(description)
+                    .setImgData(imgData)
+                    .setUploader(me.getId())
+                    .setUploaded(new Timestamp(System.currentTimeMillis()))
+                    .persist()
+            ).map(img -> "true")
+                .orElse("false");
     }
 
     @Override
     public String onFind(String freeText, String sessionKey) {
-		return getSession(sessionKey).map(me -> 
+		return getLoggedIn(sessionKey).map(me -> 
 			"{\"users\":[" +
 				User.stream()
                     // If the freetext matches any field.
@@ -83,12 +104,46 @@ public class Server extends ServerBase {
                         UserField.MAIL.startsWith(freeText))
                     )
                     
-                    // And no link exist.
+                    // And this is not us.
+                    .filter(UserField.ID.notEqual(me.getId()))
+                    
+                    // Remove people we already follow
                     .filter(them -> !me.linksByFollower()
-                        .anyMatch(link -> them.getId().equals(link.getFollows()))
+                        .anyMatch(LinkField.FOLLOWS.equal(them.getId()))
                     )
+                    
+                    // Limit result to 10 persons.
+                    .limit(10)
+                    
+                    // Sort the list after number of mutual contacts
+                    .sorted((a, b) -> {
+                        final Set<Long> 
+                            total = a.linksByFollower()
+                                .map(Link::findFollows)
+                                .map(User::getId)
+                                .collect(Collectors.toSet()),
+                        
+                            onlyB = b.linksByFollower()
+                                .map(Link::findFollows)
+                                .map(User::getId)
+                                .collect(Collectors.toSet()),
+                            
+                            intersection = new HashSet<>(total);
+                        
+                        intersection.retainAll(onlyB);
+                        total.addAll(onlyB);
+                        
+                        return total.size() - intersection.size();
+                    })
 
-					.map(User::toJson)
+					.map(u -> u.toJson(new Json<User>()
+                        .put(UserField.ID)
+                        .put(UserField.MAIL)
+                        .put(UserField.FIRSTNAME)
+                        .put(UserField.LASTNAME)
+                        .put(UserField.AVATAR)
+                    ))
+                    
 					.collect(joining(", "))
 			+ "]}"
         ).orElse("{\"users:\":[]}");
@@ -96,24 +151,24 @@ public class Server extends ServerBase {
 
     @Override
     public String onFollow(long userId, String sessionKey) {
-        return getSession(sessionKey)
-            .map(me -> Link.builder()
+        return getLoggedIn(sessionKey)
+            .flatMap(me -> Link.builder()
                 .setFollower(me.getId())
                 .setFollows(userId)
                 .persist()
-            ).map(l -> "true")
-             .orElse("false");
+                .map(l -> "true")
+            ).orElse("false");
     }
 
     @Override
     public String onBrowse(String sessionKey, Optional<Timestamp> from, Optional<Timestamp> to) {
-        return getSession(sessionKey).map(me -> 
+        return getLoggedIn(sessionKey).map(me -> 
             "{\"images\":[" + 
             
             // Stream us and all the people we follow
             Stream.concat(
                 Stream.of(me),
-                me.linksByFollower().map(l -> l.findFollows()))
+                me.linksByFollower().map(Link::findFollows))
                 
                 // Get all the images uploaded by these users.
                 .flatMap(User::images)
@@ -123,7 +178,15 @@ public class Server extends ServerBase {
                 .filter(img -> !to.isPresent()   || img.getUploaded().before(to.get()))
                 
                 // Convert them to json.
-                .map(img -> img.toJson())
+                .map(img -> img.toJson(new Json<Image>()
+                    .put(ImageField.ID)
+                    .put(ImageField.TITLE)
+                    .put(ImageField.DESCRIPTION)
+                    .put(ImageField.IMGDATA)
+                    .put(ImageField.UPLOADED)
+                    .put(ImageField.UPLOADER, USER_EXCEPT_PASSWORD)
+                ))
+                
                 .collect(joining(", ")) + "]}"
         ).orElse("false");
     }
@@ -132,7 +195,7 @@ public class Server extends ServerBase {
     public String onUpdate(String mail, String firstname, String lastName, 
         Optional<String> avatar, String sessionKey) {
         
-		return getSession(sessionKey)
+		return getLoggedIn(sessionKey)
 			.flatMap(me -> {
 				final UserBuilder ub = me.toBuilder()
 					.setMail(mail)
@@ -142,25 +205,20 @@ public class Server extends ServerBase {
 				avatar.ifPresent(a -> ub.setAvatar(a));
 					
 				return ub.update();
-			}).map(u -> u.toJson()).orElse("false");
+			}).map(usr -> usr.toJson(USER_EXCEPT_PASSWORD))
+            .orElse("false");
     }
-	
-	protected String newSession(User user) {
-		final String key = nextSessionId();
-		sessions.put(key, user.getId());
-		return key;
-	}
-	
-	protected Optional<User> getSession(String key) {
-		final Long id = sessions.get(key);
-		return User.stream()
-			.filter(u -> u.getId().equals(id))
-			.findAny();
-	}
 
     protected String nextSessionId() {
         return new BigInteger(130, random).toString(32);
     }
+    
+    private final static Json<User> USER_EXCEPT_PASSWORD = new Json<User>()
+        .put(UserField.ID)
+        .put(UserField.MAIL)
+        .put(UserField.FIRSTNAME)
+        .put(UserField.LASTNAME)
+        .put(UserField.AVATAR);
 
     /**
      * @param args the command line arguments
