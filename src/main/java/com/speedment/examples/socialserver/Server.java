@@ -1,20 +1,20 @@
 package com.speedment.examples.socialserver;
 
-import com.company.speedment.orm.test.project_1.Project1Application;
-import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.Image;
-import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.ImageField;
-import com.company.speedment.orm.test.project_1.db0.socialnetwork.image.ImageManager;
-import com.company.speedment.orm.test.project_1.db0.socialnetwork.link.Link;
-import com.company.speedment.orm.test.project_1.db0.socialnetwork.link.LinkField;
-import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.User;
-import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserBuilder;
-import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserField;
-import com.company.speedment.orm.test.project_1.db0.socialnetwork.user.UserManager;
+import com.company.speedment.test.socialnetwork.SocialnetworkApplication;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.Image;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.ImageField;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.ImageManager;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.link.Link;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.link.LinkField;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.User;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.UserBuilder;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.UserField;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.UserManager;
 import com.speedment.util.json.Json;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -35,7 +35,7 @@ public class Server extends ServerBase {
 	private final Map<String, Long> sessions = new HashMap<>();
 	
 	public Server() {
-		new Project1Application().start();
+		new SocialnetworkApplication().start();
 	}
     
     private String createSession(User user) {
@@ -88,7 +88,7 @@ public class Server extends ServerBase {
                     .setDescription(description)
                     .setImgData(imgData)
                     .setUploader(me.getId())
-                    .setUploaded(new Timestamp(System.currentTimeMillis()))
+                    .setUploaded(LocalDateTime.now())
                     .persist()
             ).map(img -> "true")
                 .orElse("false");
@@ -161,7 +161,7 @@ public class Server extends ServerBase {
     }
 
     @Override
-    public String onBrowse(String sessionKey, Optional<Timestamp> from, Optional<Timestamp> to) {
+    public String onBrowse(String sessionKey, Optional<LocalDateTime> from, Optional<LocalDateTime> to) {
         return getLoggedIn(sessionKey).map(me -> 
             "{\"images\":[" + 
             
@@ -174,13 +174,14 @@ public class Server extends ServerBase {
                 .flatMap(User::images)
                 
                 // Filter the pictures uploaded since the last poll
-                .filter(img -> !from.isPresent() || img.getUploaded().after(from.get()))
-                .filter(img -> !to.isPresent()   || img.getUploaded().before(to.get()))
+                .filter(img -> !from.isPresent() || img.getUploaded().isAfter(from.get()))
+                .filter(img -> !to.isPresent()   || img.getUploaded().isBefore(to.get()))
                 
                 // Convert them to json.
                 .map(img -> Json.allFrom(ImageManager.get())
                     .put(ImageField.UPLOADER, 
                         Json.allFrom(UserManager.get())
+                            .remove(UserField.AVATAR)
                             .remove(UserField.PASSWORD)
                     ).build(img)
                 )
