@@ -22,6 +22,11 @@
                     <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>speedment-maven-plugin</artifactId>
+                <groupId>com.speedment</groupId>
+                <version>2.0.0-EA</version>
+            </plugin>
         </plugins>
     </build>
     
