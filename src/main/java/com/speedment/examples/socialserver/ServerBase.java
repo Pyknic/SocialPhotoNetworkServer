@@ -3,7 +3,6 @@ package com.speedment.examples.socialserver;
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -66,8 +65,8 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
         final String freeText = parseString(params, "freetext");
         final String firstName = parseString(params, "firstname");
         final String lastName = parseString(params, "lastname");
-        final Optional<LocalDateTime> from = parseTime(params, "from");
-        final Optional<LocalDateTime> to = parseTime(params, "to");
+        final Optional<Timestamp> from = parseTime(params, "from");
+        final Optional<Timestamp> to = parseTime(params, "to");
 
         final String msg;
         switch (command) {
@@ -109,8 +108,8 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
         return parseOptional(params, command).map(Long::parseLong).orElse(-1L);
     }
 
-    private Optional<LocalDateTime> parseTime(Map<String, String> params, String command) {
-        return parseOptional(params, command).map(LocalDateTime::parse);
+    private Optional<Timestamp> parseTime(Map<String, String> params, String command) {
+        return parseOptional(params, command).map(s -> Timestamp.valueOf(s.replace("T", " ")));
     }
 
     private String parseString(Map<String, String> params, String command) {

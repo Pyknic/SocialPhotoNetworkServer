@@ -14,7 +14,8 @@ import com.speedment.util.json.Json;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -75,8 +76,10 @@ public class Server extends ServerBase {
     @Override
     public String onSelf(String sessionKey) {
         return getLoggedIn(sessionKey)
-			.map(User::toJson)
-			.orElse("false");
+			.map(u -> Json.allFrom(UserManager.get())
+                .remove(UserField.PASSWORD)
+                .build(u)
+            ).orElse("false");
     }
 
     @Override
@@ -88,7 +91,7 @@ public class Server extends ServerBase {
                     .setDescription(description)
                     .setImgData(imgData)
                     .setUploader(me.getId())
-                    .setUploaded(LocalDateTime.now())
+                    .setUploaded(Timestamp.from(Instant.now()))
                     .persist()
             ).map(img -> "true")
                 .orElse("false");
@@ -137,9 +140,8 @@ public class Server extends ServerBase {
                         
                         return total.size() - intersection.size();
                     })
-
-					.map(u -> UserManager.get()
-                        .toJson()
+    
+					.map(u -> Json.allFrom(UserManager.get())
                         .remove(UserField.PASSWORD)
                         .build(u)
                     )
@@ -161,7 +163,7 @@ public class Server extends ServerBase {
     }
 
     @Override
-    public String onBrowse(String sessionKey, Optional<LocalDateTime> from, Optional<LocalDateTime> to) {
+    public String onBrowse(String sessionKey, Optional<Timestamp> from, Optional<Timestamp> to) {
         return getLoggedIn(sessionKey).map(me -> 
             "{\"images\":[" + 
             
@@ -174,8 +176,8 @@ public class Server extends ServerBase {
                 .flatMap(User::images)
                 
                 // Filter the pictures uploaded since the last poll
-                .filter(img -> !from.isPresent() || img.getUploaded().isAfter(from.get()))
-                .filter(img -> !to.isPresent()   || img.getUploaded().isBefore(to.get()))
+                .filter(img -> !from.isPresent() || img.getUploaded().after(from.get()))
+                .filter(img -> !to.isPresent()   || img.getUploaded().before(to.get()))
                 
                 // Convert them to json.
                 .map(img -> Json.allFrom(ImageManager.get())
@@ -204,10 +206,9 @@ public class Server extends ServerBase {
 				avatar.ifPresent(a -> ub.setAvatar(a));
 					
 				return ub.update();
-			}).map(usr -> Json
-                .allFrom(UserManager.get())
+			}).map(u -> Json.allFrom(UserManager.get())
                 .remove(UserField.PASSWORD)
-                .build(usr)
+                .build(u)
             )
             .orElse("false");
     }
