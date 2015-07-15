@@ -7,10 +7,18 @@
     <packaging>jar</packaging>
 	
 	<name>Social Photo Network - Server</name>
-    
-    <build>
-        <plugins>
-            <plugin>
+	
+	<properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+		<mainClass>com.speedment.examples.socialserver.Server</mainClass>
+		<speedment.version>2.0.0-EA</speedment.version>
+    </properties>
+	
+	<build>
+		<plugins>
+			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.2</version>
@@ -22,20 +30,14 @@
                     <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>speedment-maven-plugin</artifactId>
-                <groupId>com.speedment</groupId>
-                <version>2.0.0-EA</version>
-            </plugin>
-        </plugins>
-    </build>
-    
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-    </properties>
-        
+			<plugin>
+				<groupId>com.speedment</groupId>
+				<artifactId>speedment-maven-plugin</artifactId>
+				<version>${speedment.version}</version>
+			</plugin>
+		</plugins>
+	</build>
+	
     <dependencies>
         <dependency>
             <groupId>com.nanohttpd</groupId>
@@ -43,16 +45,11 @@
             <version>2.1.1</version>
             <classifier>jar-with-dependencies</classifier>
         </dependency>
+		
         <dependency>
             <groupId>com.speedment</groupId>
             <artifactId>speedment</artifactId>
-            <version>2.0.0-EA</version>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.35</version>
+            <version>${speedment.version}</version>
         </dependency>
     </dependencies>
-    
 </project>
