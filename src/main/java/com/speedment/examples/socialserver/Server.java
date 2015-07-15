@@ -1,5 +1,15 @@
 package com.speedment.examples.socialserver;
 
+import com.speedment.examples.generated.socialnetwork.SocialnetworkApplication;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.Image;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.ImageField;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.ImageManager;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.link.Link;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.link.LinkField;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.User;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.UserBuilder;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.UserField;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.UserManager;
 import com.speedment.util.json.Json;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
