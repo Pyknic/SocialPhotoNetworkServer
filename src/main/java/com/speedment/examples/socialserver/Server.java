@@ -1,15 +1,13 @@
 package com.speedment.examples.socialserver;
 
-import com.company.speedment.test.socialnetwork.SocialnetworkApplication;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.Image;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.ImageField;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.ImageManager;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.link.Link;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.link.LinkField;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.User;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.UserBuilder;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.UserField;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.UserManager;
+import com.speedment.examples.generated.socialnetwork.SocialnetworkApplication;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.Image;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.ImageField;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.link.Link;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.link.LinkField;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.User;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.UserBuilder;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.UserField;
 import com.speedment.util.json.JsonFormatter;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
@@ -32,23 +30,23 @@ public class Server extends ServerBase {
     protected final Random random = new SecureRandom();
 	private final Map<String, Long> sessions = new HashMap<>();
     
-    private final static JsonFormatter<User> JSON_USER_FORMATTER = 
-        JsonFormatter
-            .allFrom(UserManager.get())
-            .remove(UserField.PASSWORD);
+    private final JsonFormatter<User> jsonUserFormatter;
+    private final JsonFormatter<Image> jsonImageFormatter;
     
-    private final static JsonFormatter<Image> JSON_IMAGE_FORMATTER =
-        JsonFormatter
-            .allFrom(ImageManager.get())
+	public Server() {
+		new SocialnetworkApplication().start();
+        
+        jsonUserFormatter = JsonFormatter
+            .allFrom(User.class)
+            .remove(UserField.PASSWORD);
+        
+        jsonImageFormatter = JsonFormatter
+            .allFrom(Image.class)
             .put(ImageField.UPLOADER, 
-                JsonFormatter.allFrom(UserManager.get())
+                JsonFormatter.allFrom(User.class)
                     .remove(UserField.AVATAR)
                     .remove(UserField.PASSWORD)
             );
-            
-	
-	public Server() {
-		new SocialnetworkApplication().start();
 	}
     
     private String createSession(User user) {
@@ -92,7 +90,7 @@ public class Server extends ServerBase {
     @Override
     public String onSelf(String sessionKey) {
         final Optional<User> user = getLoggedIn(sessionKey);
-        return user.map(JSON_USER_FORMATTER::apply)
+        return user.map(jsonUserFormatter::apply)
                    .orElse("false");
     }
 
@@ -144,7 +142,7 @@ public class Server extends ServerBase {
                 .limit(10);
             
             final String result = found
-                .map(JSON_USER_FORMATTER::apply)
+                .map(jsonUserFormatter::apply)
                 .collect(joining(", "));
             
             return "{\"users\":[" + result + "]}";
@@ -192,7 +190,7 @@ public class Server extends ServerBase {
             ;
             
             final String result = images
-                .map(JSON_IMAGE_FORMATTER::apply)
+                .map(jsonImageFormatter::apply)
                 .collect(joining(","));
             
             return "{\"images\":[" + result + "]}";
@@ -220,7 +218,7 @@ public class Server extends ServerBase {
             }
             
             final Optional<User> updated = ub.update();
-            return updated.map(JSON_USER_FORMATTER::apply)
+            return updated.map(jsonUserFormatter::apply)
                           .orElse("false");
         }
         
