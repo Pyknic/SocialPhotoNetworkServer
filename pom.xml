@@ -6,19 +6,19 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 	
-	<name>Social Photo Network - Server</name>
+    <name>Social Photo Network - Server</name>
 	
-	<properties>
+    <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-		<mainClass>com.speedment.examples.socialserver.Server</mainClass>
-		<speedment.version>2.0.0-EA</speedment.version>
+        <mainClass>com.speedment.examples.socialserver.Server</mainClass>
+        <speedment.version>2.0.0-EA2-SNAPSHOT</speedment.version>
     </properties>
 	
-	<build>
-		<plugins>
-			<plugin>
+    <build>
+        <plugins>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.2</version>
@@ -30,13 +30,13 @@
                     <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
-			<plugin>
-				<groupId>com.speedment</groupId>
-				<artifactId>speedment-maven-plugin</artifactId>
-				<version>${speedment.version}</version>
-			</plugin>
-		</plugins>
-	</build>
+            <plugin>
+                <groupId>com.speedment</groupId>
+                <artifactId>speedment-maven-plugin</artifactId>
+                <version>${speedment.version}</version>
+            </plugin>
+        </plugins>
+    </build>
 	
     <dependencies>
         <dependency>
