@@ -47,7 +47,7 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
 
         final Map<String, String> params = session.getParms();
 
-        LOGGER.debug(method + " '" + uri + "' "
+        LOGGER.info(method + " '" + uri + "' "
                 + params.entrySet().stream()
                 .map(e -> "\"" + e.getKey() + "\" = \"" + limitString(e.getValue()) + "\"")
                 .collect(Collectors.joining(", ", "(", ")"))
@@ -99,7 +99,7 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
                 break;
         }
 
-        LOGGER.debug("\"" + msg + "\"");
+        LOGGER.info("\"" + msg + "\"");
 
         return new NanoHTTPD.Response(msg);
     }
