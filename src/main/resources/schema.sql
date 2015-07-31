@@ -1,4 +1,4 @@
-CREATE TABLE `socialnetwork`.`user` (
+﻿CREATE TABLE `socialnetwork`.`user` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `mail` varchar(128) NOT NULL,
   `password` varchar(128) NOT NULL,
