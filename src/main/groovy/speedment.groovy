@@ -20,6 +20,8 @@ name = "socialnetwork";
 
 dbms {
     name = 'db0';
+    ipAddress = "speedment.com";
+    username = "socialnetwork";
     schema { 
         name = 'socialnetwork';
         table {
