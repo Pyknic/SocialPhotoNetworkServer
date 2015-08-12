@@ -1,14 +1,14 @@
 package com.speedment.examples.socialserver;
 
-import com.speedment.examples.generated.socialnetwork.SocialnetworkApplication;
-import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.Image;
-import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.ImageField;
-import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.link.Link;
-import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.link.LinkField;
-import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.User;
-import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.UserBuilder;
-import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.UserField;
-import com.speedment.util.json.JsonFormatter;
+import com.company.speedment.test.socialnetwork.SocialnetworkApplication;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.Image;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.ImageField;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.link.Link;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.link.LinkField;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.User;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.UserBuilder;
+import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.UserField;
+import com.speedment.core.json.JsonFormatter;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -37,13 +37,13 @@ public class Server extends ServerBase {
 		new SocialnetworkApplication().start();
         
         jsonUserFormatter = JsonFormatter
-            .allFrom(User.class)
+            .allOf(User.class)
             .remove(UserField.PASSWORD);
         
         jsonImageFormatter = JsonFormatter
-            .allFrom(Image.class)
+            .allOf(Image.class)
             .put(ImageField.UPLOADER, 
-                JsonFormatter.allFrom(User.class)
+                JsonFormatter.allOf(User.class)
                     .remove(UserField.AVATAR)
                     .remove(UserField.PASSWORD)
             );
