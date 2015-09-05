@@ -1,7 +1,7 @@
 package com.speedment.examples.socialserver;
 
-import com.speedment.logging.Logger;
-import com.speedment.logging.LoggerManager;
+import com.speedment.internal.logging.Logger;
+import com.speedment.internal.logging.LoggerManager;
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.sql.Timestamp;
