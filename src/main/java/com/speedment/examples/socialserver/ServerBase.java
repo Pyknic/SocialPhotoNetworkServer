@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import static java.util.Optional.ofNullable;
-import com.speedment.logging.Logger;
-import com.speedment.logging.LoggerManager;
+import com.speedment.internal.logging.Logger;
+import com.speedment.internal.logging.LoggerManager;
 import java.util.stream.Collectors;
 
 /**

@@ -2,13 +2,12 @@ package com.speedment.examples.socialserver;
 
 import com.company.speedment.test.socialnetwork.SocialnetworkApplication;
 import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.Image;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.ImageField;
 import com.company.speedment.test.socialnetwork.db0.socialnetwork.link.Link;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.link.LinkField;
 import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.User;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.UserBuilder;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.UserField;
-import com.speedment.core.json.JsonFormatter;
+import com.speedment.Manager;
+import com.speedment.Speedment;
+import com.speedment.exception.SpeedmentException;
+import com.speedment.internal.core.field.encoder.JsonEncoder;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -30,22 +29,30 @@ public class Server extends ServerBase {
     protected final Random random = new SecureRandom();
 	private final Map<String, Long> sessions = new HashMap<>();
     
-    private final JsonFormatter<User> jsonUserFormatter;
-    private final JsonFormatter<Image> jsonImageFormatter;
+    private final Speedment speed;
+    
+    private final Manager<User> users;
+    private final Manager<Image> images;
+    private final Manager<Link> links;
+    
+    private final JsonEncoder<User> jsonUserEncoder;
+    private final JsonEncoder<Image> jsonImageEncoder;
     
 	public Server() {
-		new SocialnetworkApplication().start();
+		speed  = new SocialnetworkApplication().build();
+        users  = speed.managerOf(User.class);
+        images = speed.managerOf(Image.class);
+        links  = speed.managerOf(Link.class);
         
-        jsonUserFormatter = JsonFormatter
-            .allOf(User.class)
-            .remove(UserField.PASSWORD);
+        jsonUserEncoder = JsonEncoder.allOf(users)
+            .remove(User.PASSWORD);
         
-        jsonImageFormatter = JsonFormatter
-            .allOf(Image.class)
-            .put(ImageField.UPLOADER, 
-                JsonFormatter.allOf(User.class)
-                    .remove(UserField.AVATAR)
-                    .remove(UserField.PASSWORD)
+        jsonImageEncoder = JsonEncoder
+            .allOf(images)
+            .put(Image.UPLOADER, 
+                JsonEncoder.allOf(users)
+                    .remove(User.AVATAR)
+                    .remove(User.PASSWORD)
             );
 	}
     
@@ -59,39 +66,41 @@ public class Server extends ServerBase {
         final Optional<Long> userId = Optional.ofNullable(sessions.get(key));
         
         return userId.flatMap(id ->
-            User.stream()
-                .filter(UserField.ID.equal(id))
+            users.stream()
+                .filter(User.ID.equal(id))
                 .findAny()
         );
 	}
 
     @Override
     public String onRegister(String mail, String password) {
-        final Optional<User> user = User.builder()
-			.setMail(mail)
-			.setPassword(password)
-			.persist();
-        
-        return user.map(this::createSession)
-                   .orElse("false");
+        try {
+            return createSession(users.newInstance()
+                .setMail(mail)
+                .setPassword(password)
+                .persist()
+            );
+        } catch (SpeedmentException ex) {
+            return "false";
+        }
     }
 
     @Override
     public String onLogin(String mail, String password) {
-        final Optional<User> user = User.stream()
-            .filter(UserField.MAIL.equalIgnoreCase(mail))
-            .filter(UserField.PASSWORD.equal(password))
-            .findAny();
-        
-        return user.map(this::createSession)
-                   .orElse("false");
+        return users.stream()
+            .filter(User.MAIL.equalIgnoreCase(mail))
+            .filter(User.PASSWORD.equal(password))
+            .findAny()
+            .map(this::createSession)
+            .orElse("false")
+        ;
     }
 
     @Override
     public String onSelf(String sessionKey) {
-        final Optional<User> user = getLoggedIn(sessionKey);
-        return user.map(jsonUserFormatter::apply)
-                   .orElse("false");
+        return getLoggedIn(sessionKey)
+            .map(jsonUserEncoder::apply)
+            .orElse("false");
     }
 
     @Override
@@ -99,16 +108,18 @@ public class Server extends ServerBase {
         final Optional<User> user = getLoggedIn(sessionKey);
         
         if (user.isPresent()) {
-            final Optional<Image> img = Image.builder()
-                .setTitle(title)
-                .setDescription(description)
-                .setImgData(imgData)
-                .setUploader(user.get().getId())
-                .setUploaded(Timestamp.from(Instant.now()))
-                .persist();
-            
-            if (img.isPresent()) {
+            try {
+                images.newInstance()
+                    .setTitle(title)
+                    .setDescription(description)
+                    .setImgData(imgData)
+                    .setUploader(user.get().getId())
+                    .setUploaded(Timestamp.from(Instant.now()))
+                    .persist();
+                
                 return "true";
+            } catch (SpeedmentException ex) {
+                return "false";
             }
         }
         
@@ -122,27 +133,27 @@ public class Server extends ServerBase {
         if (user.isPresent()) {
             final User me = user.get();
             
-            final Stream<User> found = User.stream()
+            final Stream<User> found = users.stream()
                 // If the freetext matches any field.
                 .filter(
-                    UserField.FIRSTNAME.startsWith(freeText).or(
-                    UserField.LASTNAME.startsWith(freeText)).or(
-                    UserField.MAIL.startsWith(freeText))
+                    User.FIRSTNAME.startsWith(freeText).or(
+                    User.LASTNAME.startsWith(freeText)).or(
+                    User.MAIL.startsWith(freeText))
                 )
 
                 // And this is not us.
-                .filter(UserField.ID.notEqual(me.getId()))
+                .filter(User.ID.notEqual(me.getId()))
 
                 // Remove people we already follow
-                .filter(them -> !me.linksByFollower()
-                    .anyMatch(LinkField.FOLLOWS.equal(them.getId()))
+                .filter(them -> !me.findLinksByFollower()
+                    .anyMatch(Link.FOLLOWS.equal(them.getId()))
                 )
 
                 // Limit result to 10 persons.
                 .limit(10);
             
             final String result = found
-                .map(jsonUserFormatter::apply)
+                .map(jsonUserEncoder::apply)
                 .collect(joining(", "));
             
             return "{\"users\":[" + result + "]}";
@@ -158,13 +169,15 @@ public class Server extends ServerBase {
         if (user.isPresent()) {
             final User me = user.get();
             
-            final Optional<Link> link = Link.builder()
-                .setFollower(me.getId())
-                .setFollows(userId)
-                .persist();
-            
-            if (link.isPresent()) {
+            try {
+                links.newInstance()
+                    .setFollower(me.getId())
+                    .setFollows(userId)
+                    .persist();
+                
                 return "true";
+            } catch (SpeedmentException ex) {
+                return "false";
             }
         }
         
@@ -180,17 +193,17 @@ public class Server extends ServerBase {
             
             final Stream<User> visibleUsers = Stream.concat(
                 Stream.of(me),
-                me.linksByFollower().map(Link::findFollows)
+                me.findLinksByFollower().map(Link::findFollows)
             );
             
             final Stream<Image> images = visibleUsers
-                .flatMap(User::images)
+                .flatMap(User::findImages)
                 .filter(img -> !from.isPresent() || img.getUploaded().after(from.get()))
                 .filter(img -> !to.isPresent()   || img.getUploaded().before(to.get()))
             ;
             
             final String result = images
-                .map(jsonImageFormatter::apply)
+                .map(jsonImageEncoder::apply)
                 .collect(joining(","));
             
             return "{\"images\":[" + result + "]}";
@@ -208,18 +221,21 @@ public class Server extends ServerBase {
         if (user.isPresent()) {
             final User me = user.get();
             
-            final UserBuilder ub = me.toBuilder()
+            final User copy = me.copy()
                 .setMail(mail)
                 .setFirstName(firstname)
                 .setLastName(lastName);
             
             if (avatar.isPresent()) {
-                ub.setAvatar(avatar.get());
+                copy.setAvatar(avatar.get());
             }
             
-            final Optional<User> updated = ub.update();
-            return updated.map(jsonUserFormatter::apply)
-                          .orElse("false");
+            try {
+                final User updated = copy.update();
+                return jsonUserEncoder.apply(updated);
+            } catch (SpeedmentException ex) {
+                return "false";
+            }
         }
         
         return "false";
