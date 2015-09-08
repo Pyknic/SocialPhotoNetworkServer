@@ -180,6 +180,26 @@ public class Server extends ServerBase {
         return "false";
     }
 
+    public String onBrowseSimple(String sessionKey, Optional<Timestamp> from, Optional<Timestamp> to) {
+        final Optional<User> user = getLoggedIn(sessionKey);
+
+        if (user.isPresent()) {
+            
+            final Stream<Image> imagesToBrowse = images.stream()
+                    .filter(img -> !from.isPresent() || img.getUploaded().after(from.get()))
+                    .filter(img -> !to.isPresent() || img.getUploaded().before(to.get()));
+
+            final String result = imagesToBrowse
+                    .map(jsonImageEncoder::apply)
+                    .collect(joining(","));
+
+            return "{\"images\":[" + result + "]}";
+        }
+
+        return "false";
+    }
+    
+    
     @Override
     public String onBrowse(String sessionKey, Optional<Timestamp> from, Optional<Timestamp> to) {
         final Optional<User> user = getLoggedIn(sessionKey);
