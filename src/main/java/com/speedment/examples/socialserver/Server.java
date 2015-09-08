@@ -74,54 +74,25 @@ public class Server extends ServerBase {
 
     @Override
     public String onRegister(String mail, String password) {
-        try {
-            return createSession(users.newInstance()
-                    .setMail(mail)
-                    .setPassword(password)
-                    .persist()
-            );
-        } catch (SpeedmentException ex) {
-            return "false";
-        }
+        // Todo
+        return "false";
     }
 
     @Override
     public String onLogin(String mail, String password) {
-        return users.stream()
-                .filter(User.MAIL.equalIgnoreCase(mail))
-                .filter(User.PASSWORD.equal(password))
-                .findAny()
-                .map(this::createSession)
-                .orElse("false");
+        // Todo
+        return "false";
     }
 
     @Override
     public String onSelf(String sessionKey) {
-        return getLoggedIn(sessionKey)
-                .map(jsonUserEncoder::apply)
-                .orElse("false");
+        // Todo
+        return "false";
     }
 
     @Override
     public String onUpload(String title, String description, String imgData, String sessionKey) {
-        final Optional<User> user = getLoggedIn(sessionKey);
-
-        if (user.isPresent()) {
-            try {
-                images.newInstance()
-                        .setTitle(title)
-                        .setDescription(description)
-                        .setImgData(imgData)
-                        .setUploader(user.get().getId())
-                        .setUploaded(Timestamp.from(Instant.now()))
-                        .persist();
-
-                return "true";
-            } catch (SpeedmentException ex) {
-                return "false";
-            }
-        }
-
+        // Todo
         return "false";
     }
 
