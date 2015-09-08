@@ -2,7 +2,7 @@ import com.speedment.config.parameters.*
 
 name = "socialnetwork";
 packageLocation = "src/main/java";
-packageName = "com.company.speedment.test";
+packageName = "com.speedment.examples.generated";
 enabled = true;
 dbms {
     ipAddress = "speedment.com";

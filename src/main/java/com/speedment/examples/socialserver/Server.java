@@ -1,9 +1,9 @@
 package com.speedment.examples.socialserver;
 
-import com.company.speedment.test.socialnetwork.SocialnetworkApplication;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.image.Image;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.link.Link;
-import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.User;
+import com.speedment.examples.generated.socialnetwork.SocialnetworkApplication;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.Image;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.link.Link;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.User;
 import com.speedment.Manager;
 import com.speedment.Speedment;
 import com.speedment.exception.SpeedmentException;
