@@ -1,4 +1,4 @@
-import com.speedment.core.config.model.parameters.*
+import com.speedment.config.parameters.*
 
 name = "socialnetwork";
 packageLocation = "src/main/java";
@@ -8,7 +8,7 @@ dbms {
     ipAddress = "127.0.0.1";
     name = "db0";
     port = 3306;
-    type = StandardDbmsType.MYSQL;
+    typeName = "MySQL";
     username = "root";
     enabled = true;
     schema {
