@@ -6,16 +6,16 @@ import com.company.speedment.test.socialnetwork.db0.socialnetwork.link.Link;
 import com.company.speedment.test.socialnetwork.db0.socialnetwork.user.User;
 import com.speedment.Manager;
 import com.speedment.Speedment;
+import com.speedment.encoder.JsonEncoder;
 import com.speedment.exception.SpeedmentException;
-import com.speedment.internal.core.field.encoder.JsonEncoder;
+import com.speedment.field.Inclusion;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.Random;
 import static java.util.stream.Collectors.joining;
 import java.util.stream.Stream;
@@ -152,25 +152,28 @@ public class Server extends ServerBase {
     }
 
     @Override
-    public String onBrowse(String sessionKey, Optional<Timestamp> from, Optional<Timestamp> to) {
+    public String onBrowse(String sessionKey, OptionalLong from, OptionalLong to) {
         final Optional<User> user = getLoggedIn(sessionKey);
 
         if (user.isPresent()) {
             final User me = user.get();
 
             final Stream<User> visibleUsers = Stream.concat(
-                    Stream.of(me),
-                    me.findLinksByFollower().map(Link::findFollows)
+                Stream.of(me),
+                me.findLinksByFollower().map(Link::findFollows)
             );
 
             final Stream<Image> imagesToBrowse = visibleUsers
-                    .flatMap(User::findImages)
-                    .filter(img -> !from.isPresent() || img.getUploaded().after(from.get()))
-                    .filter(img -> !to.isPresent() || img.getUploaded().before(to.get()));
+                .flatMap(User::findImages)
+                .filter(Image.UPLOADED.between(
+                    from.orElse(Long.MIN_VALUE), 
+                    to.orElse(Long.MAX_VALUE),
+                    Inclusion.START_EXCLUSIVE_END_INCLUSIVE
+                ));
 
             final String result = imagesToBrowse
-                    .map(jsonImageEncoder::apply)
-                    .collect(joining(","));
+                .map(jsonImageEncoder::apply)
+                .collect(joining(","));
 
             return "{\"images\":[" + result + "]}";
         }

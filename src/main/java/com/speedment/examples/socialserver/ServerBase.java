@@ -2,13 +2,13 @@ package com.speedment.examples.socialserver;
 
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import static java.util.Optional.ofNullable;
 import com.speedment.internal.logging.Logger;
 import com.speedment.internal.logging.LoggerManager;
+import java.util.OptionalLong;
 import java.util.stream.Collectors;
 
 /**
@@ -19,7 +19,7 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
 
     private static final Logger LOGGER = LoggerManager.getLogger(ServerBase.class);
 
-    private static final int PORT = 8080;
+    private static final int PORT = 8281;
 
     public ServerBase() {
         super(PORT);
@@ -65,8 +65,8 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
         final String freeText = parseString(params, "freetext");
         final String firstName = parseString(params, "firstname");
         final String lastName = parseString(params, "lastname");
-        final Optional<Timestamp> from = parseTime(params, "from");
-        final Optional<Timestamp> to = parseTime(params, "to");
+        final OptionalLong from = parseTime(params, "from");
+        final OptionalLong to = parseTime(params, "to");
 
         final String msg;
         switch (command) {
@@ -108,8 +108,16 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
         return parseOptional(params, command).map(Long::parseLong).orElse(-1L);
     }
 
-    private Optional<Timestamp> parseTime(Map<String, String> params, String command) {
-        return parseOptional(params, command).map(s -> Timestamp.valueOf(s.replace("T", " ")));
+    private OptionalLong parseTime(Map<String, String> params, String command) {
+        if (params.containsKey(command)) {
+            
+            final String param = params.get(command);
+            if (param != null && !param.isEmpty()) {
+                return OptionalLong.of(Long.parseLong(param));
+            }
+        }
+        
+        return OptionalLong.empty();
     }
 
     private String parseString(Map<String, String> params, String command) {
