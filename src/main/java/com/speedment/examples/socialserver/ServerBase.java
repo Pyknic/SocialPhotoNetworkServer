@@ -1,14 +1,14 @@
 package com.speedment.examples.socialserver;
 
-import com.speedment.internal.logging.Logger;
-import com.speedment.internal.logging.LoggerManager;
+import com.speedment.logging.Logger;
+import com.speedment.logging.LoggerManager;
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import static java.util.Optional.ofNullable;
+import java.util.OptionalLong;
 import java.util.stream.Collectors;
 
 /**
@@ -19,11 +19,11 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
 
     private static final Logger LOGGER = LoggerManager.getLogger(ServerBase.class);
 
-    private static final int PORT = 8080;
+    private static final int PORT = 8281;
 
     public ServerBase() {
         super(PORT);
-        LOGGER.info("running on http://127.0.0.1:" + PORT + ".");
+        LOGGER.info(" running on http://127.0.0.1:" + PORT + ".");
     }
 
     @Override
@@ -47,7 +47,7 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
 
         final Map<String, String> params = session.getParms();
 
-        LOGGER.info(method + " '" + uri + "' "
+        LOGGER.debug(method + " '" + uri + "' "
                 + params.entrySet().stream()
                 .map(e -> "\"" + e.getKey() + "\" = \"" + limitString(e.getValue()) + "\"")
                 .collect(Collectors.joining(", ", "(", ")"))
@@ -65,8 +65,8 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
         final String freeText = parseString(params, "freetext");
         final String firstName = parseString(params, "firstname");
         final String lastName = parseString(params, "lastname");
-        final Optional<Timestamp> from = parseTime(params, "from");
-        final Optional<Timestamp> to = parseTime(params, "to");
+        final OptionalLong from = parseTime(params, "from");
+        final OptionalLong to = parseTime(params, "to");
 
         final String msg;
         switch (command) {
@@ -99,17 +99,25 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
                 break;
         }
 
-        LOGGER.info("\"" + msg + "\"");
+        LOGGER.debug("\"" + msg + "\"");
 
         return new NanoHTTPD.Response(msg);
     }
 
     private long parseLong(Map<String, String> params, String command) {
-        return parseOptional(params, command).map(s -> Long.parseLong(s)).orElse(-1L);
+        return parseOptional(params, command).map(Long::parseLong).orElse(-1L);
     }
 
-    private Optional<Timestamp> parseTime(Map<String, String> params, String command) {
-        return parseOptional(params, command).map(s -> Timestamp.valueOf(s.replaceAll("T", " ")));
+    private OptionalLong parseTime(Map<String, String> params, String command) {
+        if (params.containsKey(command)) {
+            
+            final String param = params.get(command);
+            if (param != null && !param.isEmpty()) {
+                return OptionalLong.of(Long.parseLong(param));
+            }
+        }
+        
+        return OptionalLong.empty();
     }
 
     private String parseString(Map<String, String> params, String command) {
@@ -117,7 +125,7 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
     }
 
     private Optional<String> parseOptional(Map<String, String> params, String command) {
-        return ofNullable(params.get(command)).map(s -> s.trim()).filter(p -> !p.isEmpty());
+        return ofNullable(params.get(command)).map(String::trim).filter(p -> !p.isEmpty());
     }
 
     private String limitString(String s) {
