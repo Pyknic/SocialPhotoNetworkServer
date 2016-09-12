@@ -1,7 +1,5 @@
 package com.speedment.examples.socialserver;
 
-import com.speedment.logging.Logger;
-import com.speedment.logging.LoggerManager;
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.util.HashMap;
@@ -10,6 +8,8 @@ import java.util.Optional;
 import static java.util.Optional.ofNullable;
 import java.util.OptionalLong;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  */
 public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
 
-    private static final Logger LOGGER = LoggerManager.getLogger(ServerBase.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerBase.class);
 
     private static final int PORT = 8281;
 
