@@ -31,7 +31,7 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
         final Map<String, String> files = new HashMap<>();
         final NanoHTTPD.Method method = session.getMethod();
         final String uri = session.getUri();
-        final String command = uri.substring(uri.indexOf("/") + 1);
+        final String command = uri.substring(uri.lastIndexOf("/") + 1);
 
         if (Method.PUT.equals(method) || Method.POST.equals(method)) {
             try {
