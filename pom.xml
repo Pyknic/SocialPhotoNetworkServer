@@ -13,7 +13,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <mainClass>com.speedment.examples.socialserver.Server</mainClass>
-        <speedment.version>3.0.1-SNAPSHOT</speedment.version>
+        <speedment.version>3.0.1</speedment.version>
     </properties>
 	
     <build>
@@ -58,6 +58,7 @@
             <groupId>com.speedment</groupId>
             <artifactId>runtime</artifactId>
             <version>${speedment.version}</version>
+            <type>pom</type>
         </dependency>
 
         <dependency>
@@ -70,6 +71,12 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.38</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.speedment.plugins</groupId>
+            <artifactId>json-stream</artifactId>
+            <version>${speedment.version}</version>
         </dependency>
     </dependencies>
 </project>
