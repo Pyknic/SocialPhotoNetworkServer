@@ -19,7 +19,7 @@ public abstract class ServerBase extends NanoHTTPD implements ServerAPI {
 
     private static final Logger LOGGER = LoggerManager.getLogger(ServerBase.class);
 
-    private static final int PORT = 8080;
+    private static final int PORT = 8081;
 
     public ServerBase() {
         super(PORT);
