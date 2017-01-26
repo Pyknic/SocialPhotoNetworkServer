@@ -1,5 +1,7 @@
 package com.speedment.examples.socialserver;
 
+import com.speedment.common.logger.Logger;
+import com.speedment.common.logger.LoggerManager;
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -7,8 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import static java.util.Optional.ofNullable;
-import com.speedment.internal.logging.Logger;
-import com.speedment.internal.logging.LoggerManager;
 import java.util.stream.Collectors;
 
 /**
