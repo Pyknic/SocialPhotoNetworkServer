@@ -1,13 +1,21 @@
 package com.speedment.examples.socialserver;
 
 import com.speedment.examples.generated.socialnetwork.SocialnetworkApplication;
+import com.speedment.examples.generated.socialnetwork.SocialnetworkApplicationBuilder;
 import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.Image;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.ImageImpl;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.image.ImageManager;
 import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.link.Link;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.link.LinkImpl;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.link.LinkManager;
 import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.User;
-import com.speedment.Manager;
-import com.speedment.Speedment;
-import com.speedment.exception.SpeedmentException;
-import com.speedment.internal.core.field.encoder.JsonEncoder;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.UserImpl;
+import com.speedment.examples.generated.socialnetwork.db0.socialnetwork.user.UserManager;
+import com.speedment.plugins.json.JsonBundle;
+import com.speedment.plugins.json.JsonComponent;
+import com.speedment.plugins.json.JsonEncoder;
+import com.speedment.runtime.core.exception.SpeedmentException;
+import com.speedment.runtime.field.method.BackwardFinder;
 import fi.iki.elonen.ServerRunner;
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -29,28 +37,35 @@ public class Server extends ServerBase {
     protected final Random random = new SecureRandom();
 	private final Map<String, Long> sessions = new HashMap<>();
     
-    private final Speedment speed;
+    private final SocialnetworkApplication speed;
     
-    private final Manager<User> users;
-    private final Manager<Image> images;
-    private final Manager<Link> links;
+    private final UserManager users;
+    private final ImageManager images;
+    private final LinkManager links;
     
     private final JsonEncoder<User> jsonUserEncoder;
     private final JsonEncoder<Image> jsonImageEncoder;
     
 	public Server() {
-		speed  = new SocialnetworkApplication().build();
-        users  = speed.managerOf(User.class);
-        images = speed.managerOf(Image.class);
-        links  = speed.managerOf(Link.class);
+		speed  = new SocialnetworkApplicationBuilder()
+            .withBundle(JsonBundle.class)
+            .withUsername("root")
+            .withPassword("password")
+            .build();
         
-        jsonUserEncoder = JsonEncoder.allOf(users)
+        users  = speed.getOrThrow(UserManager.class);
+        images = speed.getOrThrow(ImageManager.class);
+        links  = speed.getOrThrow(LinkManager.class);
+        
+        final JsonComponent json = speed.getOrThrow(JsonComponent.class);
+        
+        jsonUserEncoder = json.allOf(users)
             .remove(User.PASSWORD);
         
-        jsonImageEncoder = JsonEncoder
+        jsonImageEncoder = json
             .allOf(images)
             .put(Image.UPLOADER, 
-                JsonEncoder.allOf(users)
+                json.allOf(users)
                     .remove(User.AVATAR)
                     .remove(User.PASSWORD)
             );
@@ -75,10 +90,11 @@ public class Server extends ServerBase {
     @Override
     public String onRegister(String mail, String password) {
         try {
-            return createSession(users.newInstance()
-                .setMail(mail)
-                .setPassword(password)
-                .persist()
+            return createSession(
+                users.persist(new UserImpl()
+                    .setMail(mail)
+                    .setPassword(password)
+                )
             );
         } catch (SpeedmentException ex) {
             return "false";
@@ -109,13 +125,13 @@ public class Server extends ServerBase {
         
         if (user.isPresent()) {
             try {
-                images.newInstance()
+                images.persist(new ImageImpl()
                     .setTitle(title)
                     .setDescription(description)
                     .setImgData(imgData)
                     .setUploader(user.get().getId())
                     .setUploaded(Timestamp.from(Instant.now()))
-                    .persist();
+                );
                 
                 return "true";
             } catch (SpeedmentException ex) {
@@ -136,8 +152,8 @@ public class Server extends ServerBase {
             final Stream<User> found = users.stream()
                 // If the freetext matches any field.
                 .filter(
-                    User.FIRSTNAME.startsWith(freeText).or(
-                    User.LASTNAME.startsWith(freeText)).or(
+                    User.FIRST_NAME.startsWith(freeText).or(
+                    User.LAST_NAME.startsWith(freeText)).or(
                     User.MAIL.startsWith(freeText))
                 )
 
@@ -145,7 +161,7 @@ public class Server extends ServerBase {
                 .filter(User.ID.notEqual(me.getId()))
 
                 // Remove people we already follow
-                .filter(them -> !me.findLinksByFollower()
+                .filter(them -> !links.findBackwardsBy(Link.FOLLOWER, me)
                     .anyMatch(Link.FOLLOWS.equal(them.getId()))
                 )
 
@@ -170,10 +186,10 @@ public class Server extends ServerBase {
             final User me = user.get();
             
             try {
-                links.newInstance()
+                links.persist(new LinkImpl()
                     .setFollower(me.getId())
                     .setFollows(userId)
-                    .persist();
+                );
                 
                 return "true";
             } catch (SpeedmentException ex) {
@@ -193,16 +209,31 @@ public class Server extends ServerBase {
             
             final Stream<User> visibleUsers = Stream.concat(
                 Stream.of(me),
-                me.findLinksByFollower().map(Link::findFollows)
+                links.findBackwardsBy(Link.FOLLOWER, me)
+                    .map(Link.FOLLOWS.finder(users.getTableIdentifier(), users::stream))
             );
             
-            final Stream<Image> images = visibleUsers
-                .flatMap(User::findImages)
-                .filter(img -> !from.isPresent() || img.getUploaded().after(from.get()))
-                .filter(img -> !to.isPresent()   || img.getUploaded().before(to.get()))
-            ;
+            final BackwardFinder<User, Image> imagesByUser = 
+                Image.UPLOADER.backwardFinder(
+                    images.getTableIdentifier(), 
+                    images::stream
+                );
             
-            final String result = images
+            final Stream<Image> imgs;
+            if (from.isPresent() && to.isPresent()) {
+                imgs = visibleUsers.flatMap(imagesByUser)
+                    .filter(Image.UPLOADED.between(from.get(), to.get()));
+            } else if (from.isPresent()) {
+                imgs = visibleUsers.flatMap(imagesByUser)
+                    .filter(Image.UPLOADED.greaterOrEqual(from.get()));
+            } else if (to.isPresent()) {
+                imgs = visibleUsers.flatMap(imagesByUser)
+                    .filter(Image.UPLOADED.lessThan(to.get()));
+            } else {
+                imgs = visibleUsers.flatMap(imagesByUser);
+            }
+            
+            final String result = imgs.limit(10)
                 .map(jsonImageEncoder::apply)
                 .collect(joining(","));
             
@@ -221,17 +252,21 @@ public class Server extends ServerBase {
         if (user.isPresent()) {
             final User me = user.get();
             
-            final User copy = me.copy()
+            final User copy = new UserImpl()
+                .setId(me.getId())
                 .setMail(mail)
+                .setPassword(me.getPassword())
                 .setFirstName(firstname)
                 .setLastName(lastName);
             
             if (avatar.isPresent()) {
                 copy.setAvatar(avatar.get());
+            } else {
+                me.getAvatar().ifPresent(copy::setAvatar);
             }
             
             try {
-                final User updated = copy.update();
+                final User updated = users.update(copy);
                 return jsonUserEncoder.apply(updated);
             } catch (SpeedmentException ex) {
                 return "false";
